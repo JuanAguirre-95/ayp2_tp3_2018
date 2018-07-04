@@ -1,37 +1,45 @@
+
+from heapq import heappush, heappop
+from collections import deque
+
 class Vertice:
 
 	def __init__(self,valor = None):
 		self.valor = valor
 		self.aristas = {}
-	
+
 	def obtener_aristas(self):
 		return self.aristas
-		
+
 	def obtener_valor(self):
 		return self.valor
 	def __str__(self):
 		return self.valor
-			
+
 class Grafo:
 
 	def __init__(self,dirigido = False, pesado = False):
 		self.dict_vertices = {}
-		self.cant_vertices = 0;
+		self.cant_vertices = 0
 		self.es_dirigido = dirigido
 		self.es_pesado = pesado
 
 	def __str__(self):
-		return list(self.dict_vertices)
+		return list(self.dict_vertices) #no conviene usar dict_vertices.keys() ?
+
 	def obtener_vertices(self):
 		return list(self.dict_vertices)
-	
+
+	def cantidad_vertices(self):
+		return self.cant_vertices
+
 	def agregar_vertice(self,valor):
-		
+
 		if valor in self.dict_vertices:
 			return False
-			
+
 		nuevo_vertice = Vertice(valor)
-		
+
 		self.dict_vertices[valor] = nuevo_vertice
 		self.cant_vertices+=1
 		return True
@@ -51,10 +59,10 @@ class Grafo:
 
 		if vert1 in aristas2 or vert2 in aristas1:
 			return False
-		
+
 		aristas1[vert2] = peso
 
-		if not self.es_dirigido: #si es dirigido
+		if not self.es_dirigido: #si no es dirigido
 			aristas2[vert1] = peso
 		return True
 
@@ -63,13 +71,13 @@ class Grafo:
 			PRE: Recibe el nombre de 2 vertices
 			POST: Devuelve el peso de la arista que los une
 
-			Excepciones: 
+			Excepciones:
 				ValueError si no encuentra alguno de los vertices
 		"""
 		if not self.es_pesado:
 			return None
-
-		aristas1 = vert1.obtener_aristas()
+		vertice = self.dict_vertices[vert1]
+		aristas1 = vertice.obtener_aristas()
 		return aristas1[vert2]
 
 	def borrar_vertice(self, vertice):
@@ -104,7 +112,7 @@ class Grafo:
 			PRE: Recibe dos nombres de vertices
 			POST: Devuelve true o false si existe arista
 
-			Excepciones: 
+			Excepciones:
 				ValueError en caso de que no exista alguno de los vertices
 		"""
 		if vert1 not in self.dict_vertices or vert2 not in self.dict_vertices:
@@ -114,7 +122,7 @@ class Grafo:
 		vertice2 = self.dict_vertices[vert2]
 		if vert2 not in vertice1.obtener_aristas():
 			return False
-		return True	
+		return True
 
 	def obtener_adyacentes(self, vert1): #TODO Manejar excepciones
 		"""
@@ -133,7 +141,7 @@ class Grafo:
 	def __iter__(self):
 		self.indice =0
 		return self
-	def next(self):
+	def __next__(self):
 		try:
 			lista = list(self.dict_vertices)
 			result = lista[self.indice]
@@ -141,32 +149,184 @@ class Grafo:
 			raise StopIteration
 		self.indice += 1
 		return result
-		
+
+
+def arbol_tendido_minimo(grafo_1):
+	heapq = []
+	visitados = {}
+	grafo_n = Grafo(False,True) #no es dirigido
+	cant_vertices = len(grafo_1.obtener_vertices())
+
+	for v in grafo_1: #Pongo todos los vertices como no visitados
+		visitados[v] = False
+
+	vertice_random = grafo_1.obtener_vertices()[0]
+	visitados[vertice_random] = True
+	grafo_n.agregar_vertice(vertice_random)
+
+	for ady in grafo_1.obtener_adyacentes(vertice_random): #Encolo los ady de vertice random
+		peso = grafo_1.obtener_peso(vertice_random, ady)
+		item = (peso,vertice_random,ady)
+		heappush(heapq,item)
+	contador = 1
+	while contador < cant_vertices  and heapq:
+		desencolado = heappop(heapq)
+		vertice = desencolado[2]
+		if visitados[vertice] == False:
+			visitados[vertice] = True
+			++contador
+			grafo_n.agregar_vertice(vertice)
+			grafo_n.agregar_arista(desencolado[1],vertice,desencolado[0])
+			for adya in grafo_1.obtener_adyacentes(vertice):
+				if visitados[adya] == False:
+					peso_aris = grafo_1.obtener_peso(vertice,adya)
+					item_ady = (peso_aris,vertice,adya)
+					heappush(heapq,item_ady)
+
+	return grafo_n
+
+
+def orden_topologico(grafo):
+	grado_entrada = {}
+	ordenado = []
+
+	for vertices in grafo: #Pongo todos grados de entrada en 0
+		grado_entrada[vertices] = 0
+
+	for vertices in grafo: #Sumo los grados de entrada
+		for ady  in grafo.obtener_adyacentes(vertices):
+			grado_entrada[ady] +=1
+
+	cola = deque()
+
+	for vertice in grafo:
+		if grado_entrada[vertice] == 0:
+			cola.append(vertice)
+
+	while cola:
+		vertice_aux = cola.pop()
+		ordenado.append(vertice_aux)
+		for ady in grafo.obtener_adyacentes(vertice_aux):
+			grado_entrada[ady] -=1
+			if grado_entrada[ady] == 0:
+				cola.append(ady)
+
+	return ordenado
+
+
 
 def main():
-	grafo = Grafo(False,False)
 
-	grafo.agregar_vertice("hola")
-	grafo.agregar_vertice("mundo")
-	grafo.agregar_vertice("que tal")
+		print("----PRUEBAS TENDIDO MINIMO: PRIM----")
+		#https://jariasf.files.wordpress.com/2012/04/kruskal20.jpg
+		#con arista de 2 a 3 peso 10.
 
-	grafo.agregar_arista("hola","mundo")
-	grafo.agregar_arista("hola","que tal")
+		grafo_n = Grafo(False,True)
+		grafo_n.agregar_vertice('1')
+		grafo_n.agregar_vertice('2')
+		grafo_n.agregar_vertice('3')
+		grafo_n.agregar_vertice('4')
+		grafo_n.agregar_vertice('5')
+		grafo_n.agregar_vertice('6')
+		grafo_n.agregar_vertice('7')
+		grafo_n.agregar_vertice('8')
+		grafo_n.agregar_vertice('9')
 
-	vertice = grafo.obtener_vertice("hola")
-	vertice2 = grafo.obtener_vertice("mundo")
+		grafo_n.agregar_arista("1","2",4)
+		grafo_n.agregar_arista("1","8",9)
+		grafo_n.agregar_arista("2","3",10)
+		grafo_n.agregar_arista("2","8",11)
+		grafo_n.agregar_arista("3","9",2)
+		grafo_n.agregar_arista("3","4",7)
+		grafo_n.agregar_arista("3","6",4)
+		grafo_n.agregar_arista("4","5",10)
+		grafo_n.agregar_arista("4","6",15)
+		grafo_n.agregar_arista("5","6",11)
+		grafo_n.agregar_arista("6","7",2)
+		grafo_n.agregar_arista("7","8",1)
+		grafo_n.agregar_arista("7","9",6)
+		grafo_n.agregar_arista("8","9",7)
 
-	for vert in grafo:
-		print(vert)
+		lista = []
+		for v in grafo_n:
+			for ady in grafo_n.obtener_adyacentes(v):
+				arista= v+"-"+ady
+				lista.append(arista)
 
-	print(grafo.existe_arista("hola","que tal"))
-	print(vertice2.obtener_aristas())
-	print(vertice.obtener_aristas())
-	print(grafo.obtener_vertices())
-	grafo.borrar_vertice("hola")
-	print(grafo.obtener_vertices())
-	print(vertice2.obtener_aristas())
-
+		separador = ','
+		guardar =  ("%s:%s" % (len(grafo_n.obtener_vertices()),separador.join(lista)))
+		print("Link para ver el grafo generado: http://g.ivank.net/#"+guardar)
 
 
-main()	
+		grafo_s = arbol_tendido_minimo(grafo_n) #ARBOL DE TENDIDO MINIMO
+
+		lista = []
+		for v in grafo_s:
+			for ady in grafo_s.obtener_adyacentes(v):
+				arista= v+"-"+ady
+				lista.append(arista)
+
+		separador = ','
+		guardar =  ("%s:%s" % (len(grafo_n.obtener_vertices()),separador.join(lista)))
+		print("Link para ver el grafo generado: http://g.ivank.net/#"+guardar)
+
+
+
+
+
+
+		print("----PRUEBAS ORDEN TOPOLOGICO---")
+		grafo_2 = Grafo(True,False)
+		#Vertices
+		grafo_2.agregar_vertice("Calcetines")
+		grafo_2.agregar_vertice("Pantalon")
+		grafo_2.agregar_vertice("Camisa")
+		grafo_2.agregar_vertice("Zapatos")
+		grafo_2.agregar_vertice("Cinturon")
+		grafo_2.agregar_vertice("Jersey")
+
+		#Aristas
+		grafo_2.agregar_arista("Calcetines", "Zapatos")
+		grafo_2.agregar_arista("Pantalon","Zapatos")
+		grafo_2.agregar_arista("Pantalon","Cinturon")
+		grafo_2.agregar_arista("Camisa","Cinturon")
+		grafo_2.agregar_arista("Camisa","Jersey")
+
+		lista = orden_topologico(grafo_2)
+		print (lista)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+main()
