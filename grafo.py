@@ -334,7 +334,7 @@ def main():
 
 
 
-		print("==========PRUEBAS CAMINO MINIMO=========") #ORDEN TOPOLOGICO
+		print("==========PRUEBAS CAMINO MINIMO=========") #PRUEBA CAMINO MINIMO
 		#Use este grafo
 		#http://www.myassignmenthelp.net/images/dijkstra-shortest-path-algorithm-output.png
 
@@ -391,7 +391,7 @@ def main():
 		grafo_d.agregar_arista("f", "z",16)
 		grafo_d.agregar_arista("g", "z",7)
 		print("Espero: a-d-c-b-f-e-z")
-		camino_minimo(grafo_d,"a","z") 	
+		camino_minimo(grafo_d,"a","z")
 
 
 
