@@ -25,7 +25,7 @@ class Grafo:
 		self.es_pesado = pesado
 
 	def __str__(self):
-		return list(self.dict_vertices) #no conviene usar dict_vertices.keys() ?
+		return list(self.dict_vertices)
 
 	def obtener_vertices(self):
 		return list(self.dict_vertices)
@@ -62,7 +62,8 @@ class Grafo:
 
 		aristas1[vert2] = peso
 
-		if not self.es_dirigido: #si no es dirigido
+		if  not self.es_dirigido : #si no  es dirigido
+
 			aristas2[vert1] = peso
 		return True
 
@@ -154,7 +155,7 @@ class Grafo:
 def arbol_tendido_minimo(grafo_1):
 	heapq = []
 	visitados = {}
-	grafo_n = Grafo(False,True) #no es dirigido
+	grafo_n = Grafo(False,True) #no es dirigido ?
 	cant_vertices = len(grafo_1.obtener_vertices())
 
 	for v in grafo_1: #Pongo todos los vertices como no visitados
@@ -186,7 +187,7 @@ def arbol_tendido_minimo(grafo_1):
 	return grafo_n
 
 
-def orden_topologico(grafo):
+def orden_topologico(grafo): #Ver el tema de return NONE si no puede-
 	grado_entrada = {}
 	ordenado = []
 
@@ -200,7 +201,7 @@ def orden_topologico(grafo):
 	cola = deque()
 
 	for vertice in grafo:
-		if grado_entrada[vertice] == 0:
+		if grado_entrada[vertice] == 0: #Si tiene grado de entrada 0 lo encolo
 			cola.append(vertice)
 
 	while cola:
@@ -211,17 +212,53 @@ def orden_topologico(grafo):
 			if grado_entrada[ady] == 0:
 				cola.append(ady)
 
+	if len(ordenado) < len(grafo.obtener_vertices()):
+		return None
 	return ordenado
 
+def camino_minimo(grafo,desde,hasta):
+	padres = {}
+	distancia = {}
+	heapq = []
+	for vertice in grafo:
+		padres[vertice] = None
+		distancia[vertice] = 100000 # cambiarlo a una constante
+	distancia[desde]= 0
+
+	principio = (distancia[desde],desde) #encolamos el principio con peso 0
+	vertices_visitados = 0
+	heappush(heapq,principio)
+	while heapq:
+		(dist,vert) = heappop(heapq)
+		for ady in grafo.obtener_adyacentes(vert):
+		   dista_candidato = distancia[vert] +  grafo.obtener_peso(vert,ady)
+		   if(distancia[ady] > dista_candidato):
+			   distancia[ady] = dista_candidato
+			   padres[ady] = vert
+			   if(ady == hasta):
+				   break
+			   encolar = (dista_candidato,ady)
+			   heappush(heapq,encolar)
+		++vertices_visitados
+	#Vuelvo sobre el padre y lo printeo reverseado
+	lista = []
+	lista.append(hasta)
+	while padres[hasta]:
+		nuevo_padre = padres[hasta]
+		lista.append(nuevo_padre)
+		padres[hasta] = padres[nuevo_padre]
+	print(lista[::-1])
 
 
 def main():
 
-		print("----PRUEBAS TENDIDO MINIMO: PRIM----")
+		print("==========PRUEBAS TENDIDO MINIMO: PRIM==========")
+		print()
 		#https://jariasf.files.wordpress.com/2012/04/kruskal20.jpg
 		#con arista de 2 a 3 peso 10.
 
 		grafo_n = Grafo(False,True)
+		#Vertices
 		grafo_n.agregar_vertice('1')
 		grafo_n.agregar_vertice('2')
 		grafo_n.agregar_vertice('3')
@@ -231,7 +268,7 @@ def main():
 		grafo_n.agregar_vertice('7')
 		grafo_n.agregar_vertice('8')
 		grafo_n.agregar_vertice('9')
-
+		#Aristas
 		grafo_n.agregar_arista("1","2",4)
 		grafo_n.agregar_arista("1","8",9)
 		grafo_n.agregar_arista("2","3",10)
@@ -247,6 +284,7 @@ def main():
 		grafo_n.agregar_arista("7","9",6)
 		grafo_n.agregar_arista("8","9",7)
 
+		#Hago esto para ver el grafo
 		lista = []
 		for v in grafo_n:
 			for ady in grafo_n.obtener_adyacentes(v):
@@ -255,8 +293,8 @@ def main():
 
 		separador = ','
 		guardar =  ("%s:%s" % (len(grafo_n.obtener_vertices()),separador.join(lista)))
-		print("Link para ver el grafo generado: http://g.ivank.net/#"+guardar)
-
+		print("Link para ver el grafo generado antes de tendido minimo: http://g.ivank.net/#"+guardar)
+		print()
 
 		grafo_s = arbol_tendido_minimo(grafo_n) #ARBOL DE TENDIDO MINIMO
 
@@ -268,14 +306,12 @@ def main():
 
 		separador = ','
 		guardar =  ("%s:%s" % (len(grafo_n.obtener_vertices()),separador.join(lista)))
-		print("Link para ver el grafo generado: http://g.ivank.net/#"+guardar)
+		print("Link para ver el grafo generado con tendido minimo: http://g.ivank.net/#"+guardar)
+		print()
 
 
 
-
-
-
-		print("----PRUEBAS ORDEN TOPOLOGICO---")
+		print("==========PRUEBAS ORDEN TOPOLOGICO=========") #ORDEN TOPOLOGICO
 		grafo_2 = Grafo(True,False)
 		#Vertices
 		grafo_2.agregar_vertice("Calcetines")
@@ -294,6 +330,74 @@ def main():
 
 		lista = orden_topologico(grafo_2)
 		print (lista)
+		print()
+
+
+
+		print("==========PRUEBAS CAMINO MINIMO=========") #ORDEN TOPOLOGICO
+		#Use este grafo
+		#http://www.myassignmenthelp.net/images/dijkstra-shortest-path-algorithm-output.png
+
+
+		grafo_d = Grafo(True,True)
+		#Vertices
+		grafo_d.agregar_vertice('1')
+		grafo_d.agregar_vertice('2')
+		grafo_d.agregar_vertice('3')
+		grafo_d.agregar_vertice('4')
+		grafo_d.agregar_vertice('5')
+		grafo_d.agregar_vertice('6')
+
+		#Aristas
+		grafo_d.agregar_arista("1", "2",2)
+		grafo_d.agregar_arista("1", "3",4)
+		grafo_d.agregar_arista("2", "4",4)
+		grafo_d.agregar_arista("2", "5",2)
+		grafo_d.agregar_arista("2", "3",1)
+		grafo_d.agregar_arista("3", "5",3)
+		grafo_d.agregar_arista("4", "6",2)
+		grafo_d.agregar_arista("5", "6",2)
+
+		print("Espero 1-2-5-6")
+		camino_minimo(grafo_d,"1","6")
+
+		#Otro ejemplo camino minimo
+		#https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Dijkstrapaso8.jpg/400px-Dijkstrapaso8.jpg
+
+		grafo_d = Grafo(False,True)
+		#Vertices
+		grafo_d.agregar_vertice('a')
+		grafo_d.agregar_vertice('b')
+		grafo_d.agregar_vertice('c')
+		grafo_d.agregar_vertice('d')
+		grafo_d.agregar_vertice('e')
+		grafo_d.agregar_vertice('f')
+		grafo_d.agregar_vertice('g')
+		grafo_d.agregar_vertice('z')
+		#Aristas
+		grafo_d.agregar_arista("a", "b",16)
+		grafo_d.agregar_arista("a", "c",10)
+		grafo_d.agregar_arista("a", "d",5)
+		grafo_d.agregar_arista("b", "g",6)
+		grafo_d.agregar_arista("b", "c",2)
+		grafo_d.agregar_arista("b", "f",4)
+		grafo_d.agregar_arista("c", "f",12)
+		grafo_d.agregar_arista("c", "e",10)
+		grafo_d.agregar_arista("c", "d",4)
+		grafo_d.agregar_arista("d", "e",15)
+		grafo_d.agregar_arista("f", "e",3)
+		grafo_d.agregar_arista("e", "z",5)
+		grafo_d.agregar_arista("f", "g",8)
+		grafo_d.agregar_arista("f", "z",16)
+		grafo_d.agregar_arista("g", "z",7)
+		print("Espero: a-d-c-b-f-e-z")
+		camino_minimo(grafo_d,"a","z") 	
+
+
+
+
+
+
 
 
 
