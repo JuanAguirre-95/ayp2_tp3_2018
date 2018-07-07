@@ -297,22 +297,24 @@ class Ciudad:
 
 
 
-def leer_csv(grafo,archivo_csv):
-
+def leer_csv(archivo_csv): #Retorna un diccionario con las coordenadas de cada vertice
+	dicc = {}
+	grafo = Grafo(True,True)
 	with open(archivo_csv) as File:
 		reader = csv.reader(File)
 		cant_vertices = int((next(reader))[0])
 		for i in range(0,cant_vertices): #El archivo me dice cuantos vertices son
 			(nombre,coordenada1,coordenada2) = next(reader)
-			ciudad = Ciudad(nombre,coordenada1,coordenada2)
-			grafo.agregar_vertice(ciudad)
+			dicc[nombre] = (coordenada1,coordenada2)
+			grafo.agregar_vertice(nombre)
 
 		cant_aristas = int((next(reader))[0])
 		for i in range(0,cant_aristas):
 			(nombre1,nombre2,peso) =  next(reader)
 			grafo.agregar_arista(nombre1,nombre2,peso)
+	return grafo,dicc
 
-	file.close()
+#	file.close()
 # Terminar y hacer pruebas
 
 
@@ -500,8 +502,11 @@ def main():
 
 		print("csv")
 
-		grafo_csv = Grafo(True,True)
-		leer_csv()
+
+		dicc,grafo_csv = leer_csv("sedes.csv")
+
+		for v in grafo_csv:
+			print(v)
 
 
 
