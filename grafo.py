@@ -1,6 +1,8 @@
-
+import csv
 from heapq import heappush, heappop
 from collections import deque
+import math
+CONSTANTE_MAX = 999999
 
 class Vertice:
 
@@ -175,7 +177,7 @@ def arbol_tendido_minimo(grafo_1):
 		vertice = desencolado[2]
 		if visitados[vertice] == False:
 			visitados[vertice] = True
-			++contador
+			contador+=1
 			grafo_n.agregar_vertice(vertice)
 			grafo_n.agregar_arista(desencolado[1],vertice,desencolado[0])
 			for adya in grafo_1.obtener_adyacentes(vertice):
@@ -220,14 +222,17 @@ def camino_minimo(grafo,desde,hasta):
 	padres = {}
 	distancia = {}
 	heapq = []
+
 	for vertice in grafo:
 		padres[vertice] = None
-		distancia[vertice] = 100000 # cambiarlo a una constante
+		distancia[vertice] = CONSTANTE_MAX
+
 	distancia[desde]= 0
 
 	principio = (distancia[desde],desde) #encolamos el principio con peso 0
-	vertices_visitados = 0
 	heappush(heapq,principio)
+
+
 	while heapq:
 		(dist,vert) = heappop(heapq)
 		for ady in grafo.obtener_adyacentes(vert):
@@ -239,7 +244,7 @@ def camino_minimo(grafo,desde,hasta):
 				   break
 			   encolar = (dista_candidato,ady)
 			   heappush(heapq,encolar)
-		++vertices_visitados
+
 	#Vuelvo sobre el padre y lo printeo reverseado
 	lista = []
 	lista.append(hasta)
@@ -248,6 +253,77 @@ def camino_minimo(grafo,desde,hasta):
 		lista.append(nuevo_padre)
 		padres[hasta] = padres[nuevo_padre]
 	print(lista[::-1])
+
+
+def psp_greedy(grafo,origen):
+	orden_visitado = []
+	visitados = {}
+	cant_visitado = 0
+	cant_vertices = len(grafo.obtener_vertices())
+
+	for v in grafo.obtener_vertices():
+		visitados[v] = False
+
+	orden_visitado.append(origen)
+	actual = origen
+
+	while cant_visitado < cant_vertices:
+		heapq = []
+		for ady in grafo.obtener_adyacentes(actual):
+			if visitados[ady] ==True:
+				continue
+			peso = grafo.obtener_peso(actual,ady)
+			dato = (peso,ady)
+			heappush(heapq,dato)
+
+		ady_min = heappop(heapq)
+		actual = ady_min[1]
+		visitados[actual] = True
+		cant_visitado+=1
+		orden_visitado.append(actual)
+
+	print(orden_visitado)
+
+class Ciudad:
+	def __init__(self,nombre,latitud,longitud):
+		self.nombre = nombre
+		self.latitud = latitud
+		self.longitud = longitud
+
+	def obtener_datos(self):
+		dato = (self.nombre,self.latitud,self.longitud)
+		return dato
+
+
+
+
+def leer_csv(grafo,archivo_csv):
+
+	with open(archivo_csv) as File:
+		reader = csv.reader(File)
+		cant_vertices = int((next(reader))[0])
+		for i in range(0,cant_vertices): #El archivo me dice cuantos vertices son
+			(nombre,coordenada1,coordenada2) = next(reader)
+			ciudad = Ciudad(nombre,coordenada1,coordenada2)
+			grafo.agregar_vertice(ciudad)
+
+		cant_aristas = int((next(reader))[0])
+		for i in range(0,cant_aristas):
+			(nombre1,nombre2,peso) =  next(reader)
+			grafo.agregar_arista(nombre1,nombre2,peso)
+
+	file.close()
+# Terminar y hacer pruebas
+
+
+
+
+
+
+
+
+
+
 
 
 def main():
@@ -395,7 +471,37 @@ def main():
 
 
 
+		print()
+		print("=====PRUEBAS TSP GREEDY =====")
 
+		grafo_x = Grafo(False,True)
+		#Vertices
+		grafo_x.agregar_vertice('a')
+		grafo_x.agregar_vertice('b')
+		grafo_x.agregar_vertice('c')
+		grafo_x.agregar_vertice('d')
+		grafo_x.agregar_vertice('e')
+
+		#Aristas
+		grafo_x.agregar_arista("a", "b", 500)
+		grafo_x.agregar_arista("a", "c", 200)
+		grafo_x.agregar_arista("a", "d", 105)
+		grafo_x.agregar_arista("a", "e", 205)
+		grafo_x.agregar_arista("b", "c", 305)
+		grafo_x.agregar_arista("b", "d", 360)
+		grafo_x.agregar_arista("b", "e", 340)
+		grafo_x.agregar_arista("c", "d", 320)
+		grafo_x.agregar_arista("c", "e", 165)
+		grafo_x.agregar_arista("d", "e", 302)
+		psp_greedy(grafo_x,"b")
+
+
+
+
+		print("csv")
+
+		grafo_csv = Grafo(True,True)
+		leer_csv()
 
 
 
