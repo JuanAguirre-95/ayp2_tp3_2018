@@ -1,5 +1,4 @@
 import csv
-
 from heapq import heappush, heappop
 from collections import deque
 import math
@@ -347,18 +346,12 @@ def lista_a_kml(grafo,lista,archivo_kml,dicc):
 		f.write("</kml>\n")
 
 
-
-
-
 def ir(dicc,grafo,desde,hasta): #FUNCIONA BIEN
 	lista,distancia = camino_minimo(grafo,desde,hasta)
 	reverse = reversed(lista)
 	imprimir_lista(reverse)
 	print("Costo total:",distancia)
-	#EXPORTAR MAPA KML DESDE LISTA
 	lista_a_kml(grafo,lista,"archivo_ir_desde_hasta.kml",dicc)
-
-
 
 
 def viaje_aproximado(dicc,grafo,desde): #FUNCIONA BIEN
@@ -369,43 +362,84 @@ def viaje_aproximado(dicc,grafo,desde): #FUNCIONA BIEN
 	lista_a_kml(grafo,camino,"viaje_aproximado.kml",dicc)
 
 
-	#Exportar mapa KML DESDE LISTA
+def sumar_pesos(grafo):
+	cola = deque()
+	visitados = {}
+	cant_vertices = len(grafo.obtener_vertices())
+	peso_total = 0
+	for v in grafo:
+		visitados[v] = False
+	vertice_random = grafo.obtener_vertices()[0]
+	visitados[vertice_random] = True
+	cola.append(vertice_random)
+	while cola:
+		v = cola.pop()
+		for ady in grafo.obtener_adyacentes(v):
+			if visitados[ady] == False :
+				peso_total= peso_total + grafo.obtener_peso(v,ady)
+				visitados[ady] = True
+				cola.append(ady)
+	return peso_total
+
 
 def rusia_tendido_minimo(grafo):
 	tendido_min = arbol_tendido_minimo(grafo)
-	#EXPORTAR KML DESDE GRAFO
 
+	suma = sumar_pesos(tendido_min)
+	print("La suma de pesos es:", suma)
 
-
-
-
+	#ACA METER REDUCIR CAMINO
 
 
 
 
 
 def main():
-
-	nombre_kml = "archivo.kml"
 	print("                **** PRUEBAS DEL TP 3 *****\n")
 
-	#En dicc estan las coordenadas de cada vertice
+
+    #------------------------------------------------------------
 	print("===== PRUEBAS LEER CSV =====")
+	'''
+	Leeo un archivo csv, me retorna un grafo con sus vertices
+	 y aristas(No dirigido, pesado)
+	 @Funciona bien!
+	'''
+
 	rusia,dicc = leer_csv("sedes.csv") #Leo csv y armo grafo
 	if rusia and dicc:
 		print("Se leyo correcamente...\n")
 
 
-	#PROBANDO IR
+
+    #---------------------------------------------------------------------
 	print("====== RUEBAS IR DESDE HASTA =====")
+	'''
+	 Recibo dicc de coordenadas y grafo de rusia
+	 imprimo camino minimo desde, hasta junto a su peso
+	 exporto archivo kml
+	 @Funciona bien,.
+	 FALTA: agregarle que se le pase el nombre del archivo
+	 por parametro
+
+	 '''
 	ir(dicc,rusia,"Moscu","Saransk")
 
 
-	print()
-	#probando viajante
+
+    #--------------------------------------------------------------------------
 	print("===== PRUEBAS VIAJANTE APROX ====")
+	'''
+	Problema del viajante, imprime lista y peso, exporta archivo kml
+	@Funciona bien
+	FALTA: agregarle que se le pase el nombre por parametro
+	'''
 	viaje_aproximado(dicc,rusia,"Sochi")
 
+
+
+
+	#---------------------------------------------------------------------
 	print("===== PRUEBAS TENDIDO MINIMO ====")
 	rusia_tendido_minimo(rusia)
 
