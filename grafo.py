@@ -1,4 +1,5 @@
 import csv
+
 from heapq import heappush, heappop
 from collections import deque
 import math
@@ -154,6 +155,8 @@ class Grafo:
 		return result
 
 
+#FUNCIONES DE GRAFOS
+
 def arbol_tendido_minimo(grafo_1):
 	heapq = []
 	visitados = {}
@@ -244,7 +247,6 @@ def camino_minimo(grafo,desde,hasta):
 			   encolar = (dista_candidato,ady)
 			   heappush(heapq,encolar)
 
-	#Vuelvo sobre el padre y lo printeo reverseado
 	lista = []
 	lista.append(hasta)
 	while padres[hasta]:
@@ -254,11 +256,12 @@ def camino_minimo(grafo,desde,hasta):
 	return lista,distancia[hasta]
 
 
-def psp_greedy(grafo,origen):
+def psp_greedy(grafo,origen): #Retorna lista con orden y peso total
 	orden_visitado = []
 	visitados = {}
 	cant_visitado = 0
 	cant_vertices = len(grafo.obtener_vertices())
+	peso_total = 0
 
 	for v in grafo.obtener_vertices():
 		visitados[v] = False
@@ -276,22 +279,18 @@ def psp_greedy(grafo,origen):
 			heappush(heapq,dato)
 
 		ady_min = heappop(heapq)
+		peso_total = peso_total+ady_min[0]
 		actual = ady_min[1]
 		visitados[actual] = True
 		cant_visitado+=1
 		orden_visitado.append(actual)
-
-	print(orden_visitado)
-
-
-
-
+	return orden_visitado,peso_total
 
 
 
 def leer_csv(archivo_csv): #Retorna un grafo y un diccionario con las coordenadas de cada vertice
 	dicc = {}
-	grafo = Grafo(True,True)
+	grafo = Grafo(False	,True)
 	with open(archivo_csv) as File:
 		reader = csv.reader(File)
 		cant_vertices = int((next(reader))[0])
@@ -301,31 +300,87 @@ def leer_csv(archivo_csv): #Retorna un grafo y un diccionario con las coordenada
 			grafo.agregar_vertice(nombre)
 
 		cant_aristas = int((next(reader))[0])
-		for i in range(0,cant_aristas):
+		for x in range(0,cant_aristas):
 			(nombre1,nombre2,peso) =  next(reader)
 			peso = int(peso)
 			grafo.agregar_arista(nombre1,nombre2,peso)
 	File.close()
 	return grafo,dicc
 
-# FUNCIONES PARA LA INTERFAZ
+# ===========FUNCIONES PARA LA INTERFAZ================
+def imprimir_lista(lista):
+	string = next(lista)
+	for x in lista:
+		string = string+" -> "+x
+	print(string)
+
+def lista_a_kml(lista,archivo_kml,dicc):
+	with open("KML.txt", "w") as f:
+		f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+		f.write('<kml xmlns="http://earth.google.com/kml/2.1">\n')
+		f.write("    <Document>\n")
+		f.write("        <name>KML de RUSIA</name>\n")
+		f.write("        <description>Mostrando el camino en KML.</description>\n")
+		for linea in lista:
+			datos = dicc[linea]
+			f.write("        <Placemark>\n")
+			f.write("            <name>"+linea+"</name>\n")
+			f.write("            <description>"+linea+"</description>\n")
+			f.write("            <Point>\n")
+			f.write("                <coordinates>" +datos[0]+", " + datos[1] + "</coordinates>\n")
+			f.write("            </Point>\n")
+			f.write("        </Placemark>\n")
+		f.write("    </Document>\n")
+		f.write("</kml>\n")
+
+
+
+
 
 def ir(dicc,grafo,desde,hasta): #FUNCIONA BIEN
 	lista,distancia = camino_minimo(grafo,desde,hasta)
 	reverse = reversed(lista)
-	string = next(reverse)
-
-	for x in reverse:
-		string = string+" -> "+x
-
-	print(string)
+	imprimir_lista(reverse)
 	print("Costo total:",distancia)
+	#EXPORTAR MAPA KML DESDE LISTA
 
-	#EXPORTAR MAPA KML
+	lista_a_kml(lista,"archivo.kml",dicc)
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def viaje_aproximado(grafo,desde): #FUNCIONA BIEN
+	camino,peso_total = psp_greedy(grafo,desde)
+	itera = iter(camino)
+	imprimir_lista(itera)
+	print("Peso total:",peso_total)
+
+
+	#Exportar mapa KML DESDE LISTA
+
+def rusia_tendido_minimo(grafo):
+	tendido_min = arbol_tendido_minimo(grafo)
+	#EXPORTAR KML DESDE GRAFO
 
 
 
@@ -337,18 +392,29 @@ def ir(dicc,grafo,desde,hasta): #FUNCIONA BIEN
 
 
 def main():
+
+	nombre_kml = "archivo.kml"
+	print("                **** PRUEBAS DEL TP 3 *****\n")
+
 	#En dicc estan las coordenadas de cada vertice
-	print("Pruebas leer csv....\n")
+	print("===== PRUEBAS LEER CSV =====")
 	rusia,dicc = leer_csv("sedes.csv") #Leo csv y armo grafo
 	if rusia and dicc:
-		print("Se leyo correcamente\n")
+		print("Se leyo correcamente...\n")
 
 
 	#PROBANDO IR
-	ir(dicc,rusia,"Moscu","Sochi")
+	print("====== RUEBAS IR DESDE HASTA =====")
+	ir(dicc,rusia,"Moscu","Saransk")
 
 
+	print()
+	#probando viajante
+	print("===== PRUEBAS VIAJANTE APROX ====")
+	viaje_aproximado(rusia,"Sochi")
 
+	print("===== PRUEBAS TENDIDO MINIMO ====")
+	rusia_tendido_minimo(rusia)
 
 
 
