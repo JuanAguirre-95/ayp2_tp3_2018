@@ -315,15 +315,14 @@ def imprimir_lista(lista):
 	print(string)
 
 def lista_a_kml(grafo,lista,archivo_kml,dicc):
-
-
-	with open("KML.txt", "w") as f:
+	with open(archivo_kml, "w") as f:
 		f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 		f.write('<kml xmlns="http://earth.google.com/kml/2.1">\n')
 		f.write("    <Document>\n")
 		f.write("        <name>KML de RUSIA</name>\n")
 		f.write("        <description>Mostrando el camino en KML.</description>\n")
-		for linea in lista:
+		for i  in range(len(lista)): #creo los points de todos los vertices
+			linea = lista[i]
 			coord = dicc[linea]
 			f.write("        <Placemark>\n")
 			f.write("            <name>"+linea+"</name>\n")
@@ -332,15 +331,18 @@ def lista_a_kml(grafo,lista,archivo_kml,dicc):
 			f.write("                <coordinates>" +coord[0]+", " + coord[1] + "</coordinates>\n")
 			f.write("            </Point>\n")
 			f.write("        </Placemark>\n")
-		for linea in lista:
+
+		tam = len(lista)-1
+		for i  in (range(0,tam)): #creo los points de todos los vertices
+			linea = lista[i]
+			prox_linea = lista[i+1]
 			coord = dicc[linea]
-			for x in grafo.obtener_adyacentes(linea):
-				if x in lista:
-					f.write("        <Placemark>\n")
-					f.write("            <LineString>\n")
-					f.write("                <coordinates>"+coord[0]+", " + coord[1]+" "+dicc[x][0]+", "+dicc[x][1] +"</coordinates>\n")
-					f.write("            </LineString>")
-					f.write("        </Placemark>\n")
+			segunda_coord = dicc[prox_linea]
+			f.write("        <Placemark>\n")
+			f.write("            <LineString>\n")
+			f.write("                <coordinates>"+coord[0]+", " + coord[1]+" "+segunda_coord[0]+", "+segunda_coord[1] +"</coordinates>\n")
+			f.write("            </LineString>")
+			f.write("        </Placemark>\n")
 		f.write("    </Document>\n")
 		f.write("</kml>\n")
 
@@ -354,37 +356,17 @@ def ir(dicc,grafo,desde,hasta): #FUNCIONA BIEN
 	imprimir_lista(reverse)
 	print("Costo total:",distancia)
 	#EXPORTAR MAPA KML DESDE LISTA
-
-	lista_a_kml(grafo,lista,"archivo.kml",dicc)
-
+	lista_a_kml(grafo,lista,"archivo_ir_desde_hasta.kml",dicc)
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def viaje_aproximado(grafo,desde): #FUNCIONA BIEN
+def viaje_aproximado(dicc,grafo,desde): #FUNCIONA BIEN
 	camino,peso_total = psp_greedy(grafo,desde)
 	itera = iter(camino)
 	imprimir_lista(itera)
 	print("Peso total:",peso_total)
+	lista_a_kml(grafo,camino,"viaje_aproximado.kml",dicc)
 
 
 	#Exportar mapa KML DESDE LISTA
@@ -422,7 +404,7 @@ def main():
 	print()
 	#probando viajante
 	print("===== PRUEBAS VIAJANTE APROX ====")
-	viaje_aproximado(rusia,"Sochi")
+	viaje_aproximado(dicc,rusia,"Sochi")
 
 	print("===== PRUEBAS TENDIDO MINIMO ====")
 	rusia_tendido_minimo(rusia)
