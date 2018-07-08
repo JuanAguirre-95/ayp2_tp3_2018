@@ -232,7 +232,6 @@ def camino_minimo(grafo,desde,hasta):
 	principio = (distancia[desde],desde) #encolamos el principio con peso 0
 	heappush(heapq,principio)
 
-
 	while heapq:
 		(dist,vert) = heappop(heapq)
 		for ady in grafo.obtener_adyacentes(vert):
@@ -252,7 +251,7 @@ def camino_minimo(grafo,desde,hasta):
 		nuevo_padre = padres[hasta]
 		lista.append(nuevo_padre)
 		padres[hasta] = padres[nuevo_padre]
-	print(lista[::-1])
+	return lista,distancia[hasta]
 
 
 def psp_greedy(grafo,origen):
@@ -284,20 +283,13 @@ def psp_greedy(grafo,origen):
 
 	print(orden_visitado)
 
-class Ciudad:
-	def __init__(self,nombre,latitud,longitud):
-		self.nombre = nombre
-		self.latitud = latitud
-		self.longitud = longitud
-
-	def obtener_datos(self):
-		dato = (self.nombre,self.latitud,self.longitud)
-		return dato
 
 
 
 
-def leer_csv(archivo_csv): #Retorna un diccionario con las coordenadas de cada vertice
+
+
+def leer_csv(archivo_csv): #Retorna un grafo y un diccionario con las coordenadas de cada vertice
 	dicc = {}
 	grafo = Grafo(True,True)
 	with open(archivo_csv) as File:
@@ -311,11 +303,27 @@ def leer_csv(archivo_csv): #Retorna un diccionario con las coordenadas de cada v
 		cant_aristas = int((next(reader))[0])
 		for i in range(0,cant_aristas):
 			(nombre1,nombre2,peso) =  next(reader)
+			peso = int(peso)
 			grafo.agregar_arista(nombre1,nombre2,peso)
+	File.close()
 	return grafo,dicc
 
-#	file.close()
-# Terminar y hacer pruebas
+# FUNCIONES PARA LA INTERFAZ
+
+def ir(dicc,grafo,desde,hasta): #FUNCIONA BIEN
+	lista,distancia = camino_minimo(grafo,desde,hasta)
+	reverse = reversed(lista)
+	string = next(reverse)
+
+	for x in reverse:
+		string = string+" -> "+x
+
+	print(string)
+	print("Costo total:",distancia)
+
+	#EXPORTAR MAPA KML
+
+
 
 
 
@@ -329,187 +337,15 @@ def leer_csv(archivo_csv): #Retorna un diccionario con las coordenadas de cada v
 
 
 def main():
-
-		print("==========PRUEBAS TENDIDO MINIMO: PRIM==========")
-		print()
-		#https://jariasf.files.wordpress.com/2012/04/kruskal20.jpg
-		#con arista de 2 a 3 peso 10.
-
-		grafo_n = Grafo(False,True)
-		#Vertices
-		grafo_n.agregar_vertice('1')
-		grafo_n.agregar_vertice('2')
-		grafo_n.agregar_vertice('3')
-		grafo_n.agregar_vertice('4')
-		grafo_n.agregar_vertice('5')
-		grafo_n.agregar_vertice('6')
-		grafo_n.agregar_vertice('7')
-		grafo_n.agregar_vertice('8')
-		grafo_n.agregar_vertice('9')
-		#Aristas
-		grafo_n.agregar_arista("1","2",4)
-		grafo_n.agregar_arista("1","8",9)
-		grafo_n.agregar_arista("2","3",10)
-		grafo_n.agregar_arista("2","8",11)
-		grafo_n.agregar_arista("3","9",2)
-		grafo_n.agregar_arista("3","4",7)
-		grafo_n.agregar_arista("3","6",4)
-		grafo_n.agregar_arista("4","5",10)
-		grafo_n.agregar_arista("4","6",15)
-		grafo_n.agregar_arista("5","6",11)
-		grafo_n.agregar_arista("6","7",2)
-		grafo_n.agregar_arista("7","8",1)
-		grafo_n.agregar_arista("7","9",6)
-		grafo_n.agregar_arista("8","9",7)
-
-		#Hago esto para ver el grafo
-		lista = []
-		for v in grafo_n:
-			for ady in grafo_n.obtener_adyacentes(v):
-				arista= v+"-"+ady
-				lista.append(arista)
-
-		separador = ','
-		guardar =  ("%s:%s" % (len(grafo_n.obtener_vertices()),separador.join(lista)))
-		print("Link para ver el grafo generado antes de tendido minimo: http://g.ivank.net/#"+guardar)
-		print()
-
-		grafo_s = arbol_tendido_minimo(grafo_n) #ARBOL DE TENDIDO MINIMO
-
-		lista = []
-		for v in grafo_s:
-			for ady in grafo_s.obtener_adyacentes(v):
-				arista= v+"-"+ady
-				lista.append(arista)
-
-		separador = ','
-		guardar =  ("%s:%s" % (len(grafo_n.obtener_vertices()),separador.join(lista)))
-		print("Link para ver el grafo generado con tendido minimo: http://g.ivank.net/#"+guardar)
-		print()
+	#En dicc estan las coordenadas de cada vertice
+	print("Pruebas leer csv....\n")
+	rusia,dicc = leer_csv("sedes.csv") #Leo csv y armo grafo
+	if rusia and dicc:
+		print("Se leyo correcamente\n")
 
 
-
-		print("==========PRUEBAS ORDEN TOPOLOGICO=========") #ORDEN TOPOLOGICO
-		grafo_2 = Grafo(True,False)
-		#Vertices
-		grafo_2.agregar_vertice("Calcetines")
-		grafo_2.agregar_vertice("Pantalon")
-		grafo_2.agregar_vertice("Camisa")
-		grafo_2.agregar_vertice("Zapatos")
-		grafo_2.agregar_vertice("Cinturon")
-		grafo_2.agregar_vertice("Jersey")
-
-		#Aristas
-		grafo_2.agregar_arista("Calcetines", "Zapatos")
-		grafo_2.agregar_arista("Pantalon","Zapatos")
-		grafo_2.agregar_arista("Pantalon","Cinturon")
-		grafo_2.agregar_arista("Camisa","Cinturon")
-		grafo_2.agregar_arista("Camisa","Jersey")
-
-		lista = orden_topologico(grafo_2)
-		print (lista)
-		print()
-
-
-
-		print("==========PRUEBAS CAMINO MINIMO=========") #PRUEBA CAMINO MINIMO
-		#Use este grafo
-		#http://www.myassignmenthelp.net/images/dijkstra-shortest-path-algorithm-output.png
-
-
-		grafo_d = Grafo(True,True)
-		#Vertices
-		grafo_d.agregar_vertice('1')
-		grafo_d.agregar_vertice('2')
-		grafo_d.agregar_vertice('3')
-		grafo_d.agregar_vertice('4')
-		grafo_d.agregar_vertice('5')
-		grafo_d.agregar_vertice('6')
-
-		#Aristas
-		grafo_d.agregar_arista("1", "2",2)
-		grafo_d.agregar_arista("1", "3",4)
-		grafo_d.agregar_arista("2", "4",4)
-		grafo_d.agregar_arista("2", "5",2)
-		grafo_d.agregar_arista("2", "3",1)
-		grafo_d.agregar_arista("3", "5",3)
-		grafo_d.agregar_arista("4", "6",2)
-		grafo_d.agregar_arista("5", "6",2)
-
-		print("Espero 1-2-5-6")
-		camino_minimo(grafo_d,"1","6")
-
-		#Otro ejemplo camino minimo
-		#https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Dijkstrapaso8.jpg/400px-Dijkstrapaso8.jpg
-
-		grafo_d = Grafo(False,True)
-		#Vertices
-		grafo_d.agregar_vertice('a')
-		grafo_d.agregar_vertice('b')
-		grafo_d.agregar_vertice('c')
-		grafo_d.agregar_vertice('d')
-		grafo_d.agregar_vertice('e')
-		grafo_d.agregar_vertice('f')
-		grafo_d.agregar_vertice('g')
-		grafo_d.agregar_vertice('z')
-		#Aristas
-		grafo_d.agregar_arista("a", "b",16)
-		grafo_d.agregar_arista("a", "c",10)
-		grafo_d.agregar_arista("a", "d",5)
-		grafo_d.agregar_arista("b", "g",6)
-		grafo_d.agregar_arista("b", "c",2)
-		grafo_d.agregar_arista("b", "f",4)
-		grafo_d.agregar_arista("c", "f",12)
-		grafo_d.agregar_arista("c", "e",10)
-		grafo_d.agregar_arista("c", "d",4)
-		grafo_d.agregar_arista("d", "e",15)
-		grafo_d.agregar_arista("f", "e",3)
-		grafo_d.agregar_arista("e", "z",5)
-		grafo_d.agregar_arista("f", "g",8)
-		grafo_d.agregar_arista("f", "z",16)
-		grafo_d.agregar_arista("g", "z",7)
-		print("Espero: a-d-c-b-f-e-z")
-		camino_minimo(grafo_d,"a","z")
-
-
-
-		print()
-		print("=====PRUEBAS TSP GREEDY =====")
-
-		grafo_x = Grafo(False,True)
-		#Vertices
-		grafo_x.agregar_vertice('a')
-		grafo_x.agregar_vertice('b')
-		grafo_x.agregar_vertice('c')
-		grafo_x.agregar_vertice('d')
-		grafo_x.agregar_vertice('e')
-
-		#Aristas
-		grafo_x.agregar_arista("a", "b", 500)
-		grafo_x.agregar_arista("a", "c", 200)
-		grafo_x.agregar_arista("a", "d", 105)
-		grafo_x.agregar_arista("a", "e", 205)
-		grafo_x.agregar_arista("b", "c", 305)
-		grafo_x.agregar_arista("b", "d", 360)
-		grafo_x.agregar_arista("b", "e", 340)
-		grafo_x.agregar_arista("c", "d", 320)
-		grafo_x.agregar_arista("c", "e", 165)
-		grafo_x.agregar_arista("d", "e", 302)
-		psp_greedy(grafo_x,"b")
-
-
-
-
-		print("csv")
-
-
-		dicc,grafo_csv = leer_csv("sedes.csv")
-
-		for v in grafo_csv:
-			print(v)
-
-
-
+	#PROBANDO IR
+	ir(dicc,rusia,"Moscu","Sochi")
 
 
 
