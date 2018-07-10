@@ -161,6 +161,7 @@ def arbol_tendido_minimo(grafo_1):
 	visitados = {}
 	grafo_n = Grafo(False,True) #no es dirigido ?
 	cant_vertices = len(grafo_1.obtener_vertices())
+	peso_total = 0
 
 	for v in grafo_1: #Pongo todos los vertices como no visitados
 		visitados[v] = False
@@ -182,13 +183,14 @@ def arbol_tendido_minimo(grafo_1):
 			contador+=1
 			grafo_n.agregar_vertice(vertice)
 			grafo_n.agregar_arista(desencolado[1],vertice,desencolado[0])
+			peso_total = peso_total + desencolado[0]
 			for adya in grafo_1.obtener_adyacentes(vertice):
 				if visitados[adya] == False:
 					peso_aris = grafo_1.obtener_peso(vertice,adya)
 					item_ady = (peso_aris,vertice,adya)
 					heappush(heapq,item_ady)
 
-	return grafo_n
+	return grafo_n,peso_total
 
 
 def orden_topologico(grafo): #Ver el tema de return NONE si no puede-
@@ -364,18 +366,20 @@ def viaje_aproximado(dicc,grafo,desde): #FUNCIONA BIEN
 	lista_a_kml(grafo,camino,"viaje_aproximado.kml",dicc)
 
 
-def reducir_camino_aux(dicc,grafo,nombre_archivo):
-	cola = deque()
-	visitados = {}
+
+def exportar_csv(dicc,grafo,nombre_archivo):
 	cant_vertices = len(grafo.obtener_vertices())
-	peso_total = 0
+	visitados = {}
+	cola = deque()
+
 	f = open(nombre_archivo,'w')
 	writer = csv.writer(f)
 	writer.writerow([str(cant_vertices)])
 
-	for v in grafo: #Pongo visitados todos en falso y los escribo en un csv
-		visitados[v] = False
+	for v in grafo:
 		writer.writerow([v,dicc[v][0],dicc[v][1]])
+		visitados[v] = False
+
 	writer.writerow([cant_vertices-1])
 
 	vertice_random = grafo.obtener_vertices()[0]
@@ -387,21 +391,18 @@ def reducir_camino_aux(dicc,grafo,nombre_archivo):
 		for ady in grafo.obtener_adyacentes(v):
 			if visitados[ady] == False :
 				peso =  grafo.obtener_peso(v,ady)
-				peso_total= peso_total + peso
-				writer.writerow([v,ady,peso])
+				writer.writerow([v,ady,str(peso)])
 				visitados[ady] = True
 				cola.append(ady)
-
 	f.close()
-	return peso_total
 
 
-def reducir_caminos(dicc,grafo):
-	tendido_min = arbol_tendido_minimo(grafo)
-	suma = reducir_camino_aux(dicc,tendido_min, "camino_reducido.csv")
+def reducir_caminos(dicc,grafo,nombre_archivo_csv):
+	tendido_min,suma = arbol_tendido_minimo(grafo)
+	exportar_csv(dicc,tendido_min, nombre_archivo_csv)
 	print("La suma de pesos es:", suma)
 
-	#ACA METER REDUCIR CAMINO
+
 
 
 
@@ -454,7 +455,7 @@ def main():
 
 	#---------------------------------------------------------------------
 	print("===== PRUEBAS TENDIDO MINIMO ====")
-	reducir_caminos(dicc,rusia)
+	reducir_caminos(dicc,rusia,"arbol_minimo.csv")
 
 
 
