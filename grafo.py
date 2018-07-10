@@ -154,7 +154,7 @@ class Grafo:
 		return result
 
 
-#FUNCIONES DE GRAFOS
+#===========FUNCIONES DE GRAFOS============
 
 def arbol_tendido_minimo(grafo_1):
 	heapq = []
@@ -221,6 +221,7 @@ def orden_topologico(grafo): #Ver el tema de return NONE si no puede-
 	if len(ordenado) < len(grafo.obtener_vertices()):
 		return None
 	return ordenado
+
 
 def camino_minimo(grafo,desde,hasta):
 	padres = {}
@@ -289,6 +290,42 @@ def psp_greedy(grafo,origen): #Retorna lista con orden y peso total
 
 
 
+
+
+
+# ===========FUNCIONES PARA LA INTERFAZ================
+
+#===AUXILIARES=====
+
+def exportar_csv(dicc,grafo,nombre_archivo):
+	cant_vertices = len(grafo.obtener_vertices())
+	visitados = {}
+	cola = deque()
+
+	f = open(nombre_archivo,'w')
+	writer = csv.writer(f)
+	writer.writerow([str(cant_vertices)])
+
+	for v in grafo:
+		writer.writerow([v,dicc[v][0],dicc[v][1]])
+		visitados[v] = False
+
+	writer.writerow([cant_vertices-1])
+
+	vertice_random = grafo.obtener_vertices()[0]
+	visitados[vertice_random] = True
+	cola.append(vertice_random)
+
+	while cola:
+		v = cola.pop()
+		for ady in grafo.obtener_adyacentes(v):
+			if visitados[ady] == False :
+				peso =  grafo.obtener_peso(v,ady)
+				writer.writerow([v,ady,str(peso)])
+				visitados[ady] = True
+				cola.append(ady)
+	f.close() #FUNCIONA BIEN
+
 def leer_csv(archivo_csv): #Retorna un grafo y un diccionario con las coordenadas de cada vertice
 	dicc = {}
 	grafo = Grafo(False	,True)
@@ -308,14 +345,28 @@ def leer_csv(archivo_csv): #Retorna un grafo y un diccionario con las coordenada
 	File.close()
 	return grafo,dicc
 
+def leer_csv_recomendaciones(recomendaciones_csv):
+	grafo = Grafo(True,False)
+	f = open(recomendaciones_csv)
+	reader = csv.reader(f)
+	for x in reader:
+		a_recorrer = x[0]
+		depende = x[1]
+		grafo.agregar_vertice(a_recorrer); # Si esta repetido en el csv no pasa nada
+		grafo.agregar_vertice(depende)
+		grafo.agregar_arista(depende,a_recorrer)
+	f.close()
+	return grafo
 
 
-# ===========FUNCIONES PARA LA INTERFAZ================
+
+
+
 def imprimir_lista(lista):
 	string = next(lista)
 	for x in lista:
 		string = string+" -> "+x
-	print(string)
+	print(string) #FUNCIONA BIEN
 
 def lista_a_kml(grafo,lista,archivo_kml,dicc):
 	with open(archivo_kml, "w") as f:
@@ -347,8 +398,10 @@ def lista_a_kml(grafo,lista,archivo_kml,dicc):
 			f.write("            </LineString>")
 			f.write("        </Placemark>\n")
 		f.write("    </Document>\n")
-		f.write("</kml>\n")
+		f.write("</kml>\n") #FUNCIONA BIEN
 
+
+#=====COMANDOS=====
 
 def ir(dicc,grafo,desde,hasta): #FUNCIONA BIEN
 	lista,distancia = camino_minimo(grafo,desde,hasta)
@@ -357,7 +410,6 @@ def ir(dicc,grafo,desde,hasta): #FUNCIONA BIEN
 	print("Costo total:",distancia)
 	lista_a_kml(grafo,lista,"archivo_ir_desde_hasta.kml",dicc)
 
-
 def viaje_aproximado(dicc,grafo,desde): #FUNCIONA BIEN
 	camino,peso_total = psp_greedy(grafo,desde)
 	itera = iter(camino)
@@ -365,36 +417,11 @@ def viaje_aproximado(dicc,grafo,desde): #FUNCIONA BIEN
 	print("Peso total:",peso_total)
 	lista_a_kml(grafo,camino,"viaje_aproximado.kml",dicc)
 
-
-
-def exportar_csv(dicc,grafo,nombre_archivo):
-	cant_vertices = len(grafo.obtener_vertices())
-	visitados = {}
-	cola = deque()
-
-	f = open(nombre_archivo,'w')
-	writer = csv.writer(f)
-	writer.writerow([str(cant_vertices)])
-
-	for v in grafo:
-		writer.writerow([v,dicc[v][0],dicc[v][1]])
-		visitados[v] = False
-
-	writer.writerow([cant_vertices-1])
-
-	vertice_random = grafo.obtener_vertices()[0]
-	visitados[vertice_random] = True
-	cola.append(vertice_random)
-
-	while cola:
-		v = cola.pop()
-		for ady in grafo.obtener_adyacentes(v):
-			if visitados[ady] == False :
-				peso =  grafo.obtener_peso(v,ady)
-				writer.writerow([v,ady,str(peso)])
-				visitados[ady] = True
-				cola.append(ady)
-	f.close()
+def camino_recomendaciones(recomendaciones_csv):
+	grafo = leer_csv_recomendaciones(recomendaciones_csv)
+	lista = orden_topologico(grafo)
+	itera = iter(lista)
+	imprimir_lista(itera)
 
 
 def reducir_caminos(dicc,grafo,nombre_archivo_csv):
@@ -405,6 +432,7 @@ def reducir_caminos(dicc,grafo,nombre_archivo_csv):
 
 
 
+#QUITAR EL WITH EN LEER_CSV
 
 
 
@@ -454,9 +482,14 @@ def main():
 
 
 	#---------------------------------------------------------------------
-	print("===== PRUEBAS TENDIDO MINIMO ====")
-	reducir_caminos(dicc,rusia,"arbol_minimo.csv")
+	print("===== PRUEBAS REDUCIR CAMINO ====")
+	reducir_caminos(dicc,rusia,"reducir_caminos.csv")
 
+
+
+
+	print("===== PRUEBAS CON RECOMENDACIONES CSV ====")
+	camino_recomendaciones("ejemplo_recomendaciones.csv")
 
 
 
