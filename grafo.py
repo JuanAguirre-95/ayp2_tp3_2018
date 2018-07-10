@@ -1,4 +1,5 @@
 import csv
+import sys
 from heapq import heappush, heappop
 from collections import deque
 import math
@@ -364,7 +365,7 @@ def imprimir_lista(lista):
 		string = string+" -> "+x
 	print(string)
 
-def lista_a_kml(grafo,lista,archivo_kml,dicc):
+def lista_a_kml(lista,archivo_kml,dicc):
 	with open(archivo_kml, "w") as f:
 		f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 		f.write('<kml xmlns="http://earth.google.com/kml/2.1">\n')
@@ -391,7 +392,7 @@ def lista_a_kml(grafo,lista,archivo_kml,dicc):
 			f.write("        <Placemark>\n")
 			f.write("            <LineString>\n")
 			f.write("                <coordinates>"+coord[0]+", " + coord[1]+" "+segunda_coord[0]+", "+segunda_coord[1] +"</coordinates>\n")
-			f.write("            </LineString>")
+			f.write("            </LineString>\n")
 			f.write("        </Placemark>\n")
 		f.write("    </Document>\n")
 		f.write("</kml>\n") #FUNCIONA BIEN
@@ -410,14 +411,14 @@ def ir(dicc,grafo,desde,hasta): #FUNCIONA BIEN
 	reverse = reversed(lista)
 	imprimir_lista(reverse)
 	print("Costo total:",distancia)
-	lista_a_kml(grafo,lista,"archivo_ir_desde_hasta.kml",dicc)
+	lista_a_kml(lista,"archivo_ir_desde_hasta.kml",dicc)
 
 def viaje_aproximado(dicc,grafo,desde): #FUNCIONA BIEN
 	camino,peso_total = psp_greedy(grafo,desde)
 	itera = iter(camino)
 	imprimir_lista(itera)
 	print("Costo total:",peso_total)
-	lista_a_kml(grafo,camino,"viaje_aproximado.kml",dicc)
+	lista_a_kml(camino,"viaje_aproximado.kml",dicc)
 
 def camino_recomendaciones(rusia,recomendaciones_csv):
 	grafo = leer_csv_recomendaciones(recomendaciones_csv)
@@ -441,55 +442,38 @@ def reducir_caminos(dicc,grafo,nombre_archivo_csv):
 
 
 def main():
-	print("                **** PRUEBAS DEL TP 3 *****\n")
+	f = open("comandos.txt","r")
 
+	ciudades_csv = "sedes.csv"
+	mapa_kml = "mapa.kml"#Que lo reciba por el main
+	rusia,dicc = leer_csv(ciudades_csv) #Que lo reciba por el main
+	#for line in sys.stdin:
+	for line in f.readlines():
+		linea = line.replace(',',"")
+		linea = linea.split(" ")
+		if(linea[0] == "ir"): #=====IR DESDE, HASTA
+			hasta = linea[2].rstrip() #Quito el \n
+			ir(dicc,rusia,linea[1],hasta)
+			print()
 
-    #------------------------------------------------------------
-	print("===== PRUEBAS LEER CSV =====")
-	'''
-	Leeo un archivo csv, me retorna un grafo con sus vertices
-	 y aristas(No dirigido, pesado)
-	 @Funciona bien!
-	'''
-
-	rusia,dicc = leer_csv("sedes.csv") #Leo csv y armo grafo
-	if rusia and dicc:
-		print("Se leyo correcamente...\n")
-
-
-
-    #---------------------------------------------------------------------
-	print("====== RUEBAS IR DESDE HASTA =====")
-	'''
-	 Recibo dicc de coordenadas y grafo de rusia
-	 imprimo camino minimo desde, hasta junto a su peso
-	 exporto archivo kml
-	 @Funciona bien,.
-	 FALTA: agregarle que se le pase el nombre del archivo
-	 por parametro
-
-	 '''
-	ir(dicc,rusia,"Moscu","Saransk")
+		if(linea[0] == "viaje"):
+			if(linea[1] == "aproximado"):
+				viaje_aproximado(dicc,rusia,linea[2].rstrip())
+				print()
+			if(linea[1] == "optimo"):
+				hola = "hola"
+				#ACA INVOCAR A BACK TRACKING
+		if(linea[0] == "itinerario"):
+			camino_recomendaciones(rusia,linea[1].rstrip())
+			print()
+		if(linea[0] == "reducir_caminos"):
+			reducir_caminos(dicc,rusia,linea[1].rstrip())
+	f.close()
 
 
 
-    #--------------------------------------------------------------------------
-	print("===== PRUEBAS VIAJANTE APROX ====")
-	'''
-	Problema del viajante, imprime lista y peso, exporta archivo kml
-	@Funciona bien
-	FALTA: agregarle que se le pase el nombre por parametro
-	'''
-	viaje_aproximado(dicc,rusia,"Sochi")
+main()
 
-	#--------------------------------------------------------------------------
-
-	print("===== PRUEBAS CON RECOMENDACIONES CSV ====")
-	camino_recomendaciones(rusia,"ejemplo_recomendaciones.csv")
-
-	#---------------------------------------------------------------------
-	print("===== PRUEBAS REDUCIR CAMINO ====")
-	reducir_caminos(dicc,rusia,"reducir_caminos.csv")
 
 
 
