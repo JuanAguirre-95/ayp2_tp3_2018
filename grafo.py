@@ -292,28 +292,28 @@ def psp_greedy(grafo,origen): #Retorna lista con orden y peso total
 
 
 
-def swap(elem1, elem2):
-	elem1, elem2 = elem2, elem1
-def distancia(grafo,elem1, elem2):
-	print("{} - {}".format("ENTRO EN DISTANCIA: ",grafo.obtener_peso(elem1,elem2)))
-	return grafo.obtener_peso(elem1,elem2)
+# def swap(elem1, elem2):
+# 	elem1, elem2 = elem2, elem1
+# def distancia(grafo,elem1, elem2):
+# 	print("{} - {}".format("ENTRO EN DISTANCIA: ",grafo.obtener_peso(elem1,elem2)))
+# 	return grafo.obtener_peso(elem1,elem2)
 
-def tsp_backtracking(vertices, index, largo_actual, min_costo,grafo):
-	n = len(vertices)
-	if index == n:
-		minino = min(min_costo,largo_actual + distancia(vertices[n], vertices[0]))
-		print(minimo)
-		min_costo = minimo
-	else:
-		for i in range(index+1,n,1):
-			swap(vertices[index+1],vertices[i])
-			nuevo_largo = largo_actual + distancia(grafo,vertices[index],vertices[index+1])
-			if nuevo_largo >= min_costo:
-				continue
-			else:
-				min_costo = min(min_costo, tsp_backtracking(vertices, index+1, nuevo_largo, min_costo, grafo))
-				swap(vertices[index+1], vertices[i])
-	return min_costo
+# def tsp_backtracking(vertices, index, largo_actual, min_costo,grafo):
+# 	n = len(vertices)
+# 	if index == n:
+# 		minino = min(min_costo,largo_actual + distancia(vertices[n], vertices[0]))
+# 		print(minimo)
+# 		min_costo = minimo
+# 	else:
+# 		for i in range(index+1,n,1):
+# 			swap(vertices[index+1],vertices[i])
+# 			nuevo_largo = largo_actual + distancia(grafo,vertices[index],vertices[index+1])
+# 			if nuevo_largo >= min_costo:
+# 				continue
+# 			else:
+# 				min_costo = min(min_costo, tsp_backtracking(vertices, index+1, nuevo_largo, min_costo, grafo))
+# 				swap(vertices[index+1], vertices[i])
+# 	return min_costo
 
 def viajante(grafo, origen):
 	camino = []
