@@ -28,7 +28,8 @@ class Grafo:
 
 	def __str__(self):
 		return list(self.dict_vertices)
-
+	def __len__(self):
+		return self.cant_vertices
 	def obtener_vertices(self):
 		return list(self.dict_vertices)
 
@@ -287,6 +288,66 @@ def psp_greedy(grafo,origen): #Retorna lista con orden y peso total
 
 
 
+def swap(elem1, elem2):
+	elem1, elem2 = elem2, elem1
+def distancia(grafo,elem1, elem2):
+	print("{} - {}".format("ENTRO EN DISTANCIA: ",grafo.obtener_peso(elem1,elem2)))
+	return grafo.obtener_peso(elem1,elem2)
+
+def tsp_backtracking(vertices, index, largo_actual, min_costo,grafo):
+	n = len(vertices)
+	if index == n:
+		minino = min(min_costo,largo_actual + distancia(vertices[n], vertices[0]))
+		print(minimo)
+		min_costo = minimo
+	else:
+		for i in range(index+1,n,1):
+			swap(vertices[index+1],vertices[i])
+			nuevo_largo = largo_actual + distancia(grafo,vertices[index],vertices[index+1])
+			if nuevo_largo >= min_costo:
+				continue
+			else:
+				min_costo = min(min_costo, tsp_backtracking(vertices, index+1, nuevo_largo, min_costo, grafo))
+				swap(vertices[index+1], vertices[i])
+	return min_costo
+
+def viajante(grafo, origen):
+	camino = []
+	mejor_costo = CONSTANTE_MAX
+	prim = grafo.obtener_adyacentes(origen)
+	costo_act = 0
+	tsp_bck(grafo,origen,list(prim)[0],costo_act,mejor_costo,camino)
+	print(camino,costo_act)
+
+
+def tsp_bck(grafo, vert_ini, vert_act, costo_act, mejor_costo, camino_actual):
+
+	visitados = {}
+
+	if vert_ini == vert_act:
+		return True
+	camino_actual.append(vert_ini)
+	vert_ant = vert_ini
+	for ady in grafo.obtener_adyacentes(vert_act):
+		peso = grafo.obtener_peso(vert_act,ady)
+		print(peso)
+		if costo_act < mejor_costo and ady not in visitados:
+			print("ENTRO")
+			mejor_costo = costo_act + peso
+			print(mejor_costo,"Mej")
+			visitados[vert_act] = True
+			camino_actual.append(vert_act)
+			vert_ant = vert_act
+			vert_act = ady
+
+		if tsp_bck(grafo, vert_act, ady,costo_act,mejor_costo,camino_actual) == False: #poda
+			print("PODO!")
+			costo_act -= peso
+			visitados.pop(vert_ant)
+			camino_actual.pop(vert_ant)
+			vert_act = vert_ant
+	return False
+
 def leer_csv(archivo_csv): #Retorna un grafo y un diccionario con las coordenadas de cada vertice
 	dicc = {}
 	grafo = Grafo(False	,True)
@@ -436,9 +497,13 @@ def main():
 	'''
 	viaje_aproximado(dicc,rusia,"Sochi")
 
+	#--------------------------------------------------------------------------
+	
+	print("===== pruebas tsp backtracking ====")
+	
+	#print(tsp_backtracking(rusia.obtener_vertices(), 0 , 0, CONSTANTE_MAX,rusia))
 
-
-
+	viajante(rusia,"Sochi")
 	#---------------------------------------------------------------------
 	print("===== PRUEBAS TENDIDO MINIMO ====")
 	rusia_tendido_minimo(rusia)
