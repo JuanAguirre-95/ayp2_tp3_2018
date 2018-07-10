@@ -29,8 +29,7 @@ class Grafo:
 
 	def __str__(self):
 		return list(self.dict_vertices)
-	def __len__(self):
-		return self.cant_vertices
+
 	def obtener_vertices(self):
 		return list(self.dict_vertices)
 
@@ -292,65 +291,6 @@ def psp_greedy(grafo,origen): #Retorna lista con orden y peso total
 
 
 
-def swap(elem1, elem2):
-	elem1, elem2 = elem2, elem1
-def distancia(grafo,elem1, elem2):
-	print("{} - {}".format("ENTRO EN DISTANCIA: ",grafo.obtener_peso(elem1,elem2)))
-	return grafo.obtener_peso(elem1,elem2)
-
-def tsp_backtracking(vertices, index, largo_actual, min_costo,grafo):
-	n = len(vertices)
-	if index == n:
-		minino = min(min_costo,largo_actual + distancia(vertices[n], vertices[0]))
-		print(minimo)
-		min_costo = minimo
-	else:
-		for i in range(index+1,n,1):
-			swap(vertices[index+1],vertices[i])
-			nuevo_largo = largo_actual + distancia(grafo,vertices[index],vertices[index+1])
-			if nuevo_largo >= min_costo:
-				continue
-			else:
-				min_costo = min(min_costo, tsp_backtracking(vertices, index+1, nuevo_largo, min_costo, grafo))
-				swap(vertices[index+1], vertices[i])
-	return min_costo
-
-def viajante(grafo, origen):
-	camino = []
-	mejor_costo = CONSTANTE_MAX
-	prim = grafo.obtener_adyacentes(origen)
-	costo_act = 0
-	tsp_bck(grafo,origen,list(prim)[0],costo_act,mejor_costo,camino)
-	print(camino,costo_act)
-
-
-def tsp_bck(grafo, vert_ini, vert_act, costo_act, mejor_costo, camino_actual):
-
-	visitados = {}
-
-	if vert_ini == vert_act:
-		return True
-	camino_actual.append(vert_ini)
-	vert_ant = vert_ini
-	for ady in grafo.obtener_adyacentes(vert_act):
-		peso = grafo.obtener_peso(vert_act,ady)
-		print(peso)
-		if costo_act < mejor_costo and ady not in visitados:
-			print("ENTRO")
-			mejor_costo = costo_act + peso
-			print(mejor_costo,"Mej")
-			visitados[vert_act] = True
-			camino_actual.append(vert_act)
-			vert_ant = vert_act
-			vert_act = ady
-
-		if tsp_bck(grafo, vert_act, ady,costo_act,mejor_costo,camino_actual) == False: #poda
-			print("PODO!")
-			costo_act -= peso
-			visitados.pop(vert_ant)
-			camino_actual.pop(vert_ant)
-			vert_act = vert_ant
-	return False
 
 
 
@@ -386,7 +326,6 @@ def exportar_csv(dicc,grafo,nombre_archivo):
 				visitados[ady] = True
 				cola.append(ady)
 	f.close() #FUNCIONA BIEN
->>>>>>> 5cafd1a64c4b8b6ff03b966486e9d9d1aafb0b6a
 
 def leer_csv(archivo_csv): #Retorna un grafo y un diccionario con las coordenadas de cada vertice
 	dicc = {}
@@ -467,26 +406,27 @@ def calcular_costo_lista(grafo,lista):
 
 #=====COMANDOS=====
 
-def ir(dicc,grafo,desde,hasta): #FUNCIONA BIEN
+def ir(dicc,grafo,desde,hasta,nombre_kml): #FUNCIONA BIEN
 	lista,distancia = camino_minimo(grafo,desde,hasta)
 	reverse = reversed(lista)
 	imprimir_lista(reverse)
 	print("Costo total:",distancia)
-	lista_a_kml(lista,"archivo_ir_desde_hasta.kml",dicc)
+	lista_a_kml(lista,nombre_kml,dicc)
 
-def viaje_aproximado(dicc,grafo,desde): #FUNCIONA BIEN
+def viaje_aproximado(dicc,grafo,desde,nombre_kml): #FUNCIONA BIEN
 	camino,peso_total = psp_greedy(grafo,desde)
 	itera = iter(camino)
 	imprimir_lista(itera)
 	print("Costo total:",peso_total)
-	lista_a_kml(camino,"viaje_aproximado.kml",dicc)
+	lista_a_kml(camino,nombre_kml,dicc)
 
-def camino_recomendaciones(rusia,recomendaciones_csv):
+def camino_recomendaciones(dicc,rusia,recomendaciones_csv,nombre_kml):
 	grafo = leer_csv_recomendaciones(recomendaciones_csv)
 	lista = orden_topologico(grafo)
 	itera= iter(lista)
 	imprimir_lista(itera)
 	costo = calcular_costo_lista(rusia,lista)
+	lista_a_kml(lista,nombre_kml,dicc)
 	print("Costo total:",costo)
 
 
@@ -512,23 +452,24 @@ def main():
 	for line in f.readlines():
 		linea = line.replace(',',"")
 		linea = linea.split(" ")
-		if(linea[0] == "ir"): #=====IR DESDE, HASTA
+		if(linea[0] == "ir"):
 			hasta = linea[2].rstrip() #Quito el \n
-			ir(dicc,rusia,linea[1],hasta)
+			ir(dicc,rusia,linea[1],hasta,mapa_kml)
 			print()
 
 		if(linea[0] == "viaje"):
 			if(linea[1] == "aproximado"):
-				viaje_aproximado(dicc,rusia,linea[2].rstrip())
+				viaje_aproximado(dicc,rusia,linea[2].rstrip(),mapa_kml)
 				print()
 			if(linea[1] == "optimo"):
 				hola = "hola"
 				#ACA INVOCAR A BACK TRACKING
 		if(linea[0] == "itinerario"):
-			camino_recomendaciones(rusia,linea[1].rstrip())
+			camino_recomendaciones(dicc,rusia,linea[1].rstrip(),mapa_kml)
 			print()
 		if(linea[0] == "reducir_caminos"):
 			reducir_caminos(dicc,rusia,linea[1].rstrip())
+			print()
 	f.close()
 
 
@@ -536,21 +477,9 @@ def main():
 main()
 
 
-	#--------------------------------------------------------------------------
-	
-	print("===== pruebas tsp backtracking ====")
-	
-	#print(tsp_backtracking(rusia.obtener_vertices(), 0 , 0, CONSTANTE_MAX,rusia))
-
-<<<<<<< HEAD
-	viajante(rusia,"Sochi")
-	#---------------------------------------------------------------------
-	print("===== PRUEBAS TENDIDO MINIMO ====")
-	rusia_tendido_minimo(rusia)
-=======
 
 
->>>>>>> 5cafd1a64c4b8b6ff03b966486e9d9d1aafb0b6a
+
 
 
 
