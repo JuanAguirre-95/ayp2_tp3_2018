@@ -1,4 +1,5 @@
 import csv
+import sys
 from heapq import heappush, heappop
 from collections import deque
 import math
@@ -155,13 +156,14 @@ class Grafo:
 		return result
 
 
-#FUNCIONES DE GRAFOS
+#===========FUNCIONES DE GRAFOS============
 
 def arbol_tendido_minimo(grafo_1):
 	heapq = []
 	visitados = {}
-	grafo_n = Grafo(False,True) #no es dirigido ?
+	grafo_n = Grafo(False,True)
 	cant_vertices = len(grafo_1.obtener_vertices())
+	peso_total = 0
 
 	for v in grafo_1: #Pongo todos los vertices como no visitados
 		visitados[v] = False
@@ -183,16 +185,17 @@ def arbol_tendido_minimo(grafo_1):
 			contador+=1
 			grafo_n.agregar_vertice(vertice)
 			grafo_n.agregar_arista(desencolado[1],vertice,desencolado[0])
+			peso_total = peso_total + desencolado[0]
 			for adya in grafo_1.obtener_adyacentes(vertice):
 				if visitados[adya] == False:
 					peso_aris = grafo_1.obtener_peso(vertice,adya)
 					item_ady = (peso_aris,vertice,adya)
 					heappush(heapq,item_ady)
 
-	return grafo_n
+	return grafo_n,peso_total
 
 
-def orden_topologico(grafo): #Ver el tema de return NONE si no puede-
+def orden_topologico(grafo):
 	grado_entrada = {}
 	ordenado = []
 
@@ -220,6 +223,7 @@ def orden_topologico(grafo): #Ver el tema de return NONE si no puede-
 	if len(ordenado) < len(grafo.obtener_vertices()):
 		return None
 	return ordenado
+
 
 def camino_minimo(grafo,desde,hasta):
 	padres = {}
@@ -348,6 +352,42 @@ def tsp_bck(grafo, vert_ini, vert_act, costo_act, mejor_costo, camino_actual):
 			vert_act = vert_ant
 	return False
 
+
+
+# ===========FUNCIONES PARA LA INTERFAZ================
+
+#===AUXILIARES=====
+
+def exportar_csv(dicc,grafo,nombre_archivo):
+	cant_vertices = len(grafo.obtener_vertices())
+	visitados = {}
+	cola = deque()
+
+	f = open(nombre_archivo,'w')
+	writer = csv.writer(f)
+	writer.writerow([str(cant_vertices)])
+
+	for v in grafo:
+		writer.writerow([v,dicc[v][0],dicc[v][1]])
+		visitados[v] = False
+
+	writer.writerow([cant_vertices-1])
+
+	vertice_random = grafo.obtener_vertices()[0]
+	visitados[vertice_random] = True
+	cola.append(vertice_random)
+
+	while cola:
+		v = cola.pop()
+		for ady in grafo.obtener_adyacentes(v):
+			if visitados[ady] == False :
+				peso =  grafo.obtener_peso(v,ady)
+				writer.writerow([v,ady,str(peso)])
+				visitados[ady] = True
+				cola.append(ady)
+	f.close() #FUNCIONA BIEN
+>>>>>>> 5cafd1a64c4b8b6ff03b966486e9d9d1aafb0b6a
+
 def leer_csv(archivo_csv): #Retorna un grafo y un diccionario con las coordenadas de cada vertice
 	dicc = {}
 	grafo = Grafo(False	,True)
@@ -367,14 +407,26 @@ def leer_csv(archivo_csv): #Retorna un grafo y un diccionario con las coordenada
 	File.close()
 	return grafo,dicc
 
-# ===========FUNCIONES PARA LA INTERFAZ================
+def leer_csv_recomendaciones(recomendaciones_csv):
+	grafo = Grafo(True,False)
+	f = open(recomendaciones_csv)
+	reader = csv.reader(f)
+	for x in reader:
+		a_recorrer = x[0]
+		depende = x[1]
+		grafo.agregar_vertice(a_recorrer); # Si esta repetido en el csv no pasa nada
+		grafo.agregar_vertice(depende)
+		grafo.agregar_arista(depende,a_recorrer)
+	f.close()
+	return grafo
+
 def imprimir_lista(lista):
 	string = next(lista)
 	for x in lista:
 		string = string+" -> "+x
 	print(string)
 
-def lista_a_kml(grafo,lista,archivo_kml,dicc):
+def lista_a_kml(lista,archivo_kml,dicc):
 	with open(archivo_kml, "w") as f:
 		f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 		f.write('<kml xmlns="http://earth.google.com/kml/2.1">\n')
@@ -401,101 +453,88 @@ def lista_a_kml(grafo,lista,archivo_kml,dicc):
 			f.write("        <Placemark>\n")
 			f.write("            <LineString>\n")
 			f.write("                <coordinates>"+coord[0]+", " + coord[1]+" "+segunda_coord[0]+", "+segunda_coord[1] +"</coordinates>\n")
-			f.write("            </LineString>")
+			f.write("            </LineString>\n")
 			f.write("        </Placemark>\n")
 		f.write("    </Document>\n")
-		f.write("</kml>\n")
+		f.write("</kml>\n") #FUNCIONA BIEN
 
+def calcular_costo_lista(grafo,lista):
+	costo = 0
+	for x in range(0,len(lista)-1):
+		costo = costo +grafo.obtener_peso(lista[x],lista[x+1])
+	return costo
+
+
+#=====COMANDOS=====
 
 def ir(dicc,grafo,desde,hasta): #FUNCIONA BIEN
 	lista,distancia = camino_minimo(grafo,desde,hasta)
 	reverse = reversed(lista)
 	imprimir_lista(reverse)
 	print("Costo total:",distancia)
-	lista_a_kml(grafo,lista,"archivo_ir_desde_hasta.kml",dicc)
-
+	lista_a_kml(lista,"archivo_ir_desde_hasta.kml",dicc)
 
 def viaje_aproximado(dicc,grafo,desde): #FUNCIONA BIEN
 	camino,peso_total = psp_greedy(grafo,desde)
 	itera = iter(camino)
 	imprimir_lista(itera)
-	print("Peso total:",peso_total)
-	lista_a_kml(grafo,camino,"viaje_aproximado.kml",dicc)
+	print("Costo total:",peso_total)
+	lista_a_kml(camino,"viaje_aproximado.kml",dicc)
+
+def camino_recomendaciones(rusia,recomendaciones_csv):
+	grafo = leer_csv_recomendaciones(recomendaciones_csv)
+	lista = orden_topologico(grafo)
+	itera= iter(lista)
+	imprimir_lista(itera)
+	costo = calcular_costo_lista(rusia,lista)
+	print("Costo total:",costo)
 
 
-def sumar_pesos(grafo):
-	cola = deque()
-	visitados = {}
-	cant_vertices = len(grafo.obtener_vertices())
-	peso_total = 0
-	for v in grafo:
-		visitados[v] = False
-	vertice_random = grafo.obtener_vertices()[0]
-	visitados[vertice_random] = True
-	cola.append(vertice_random)
-	while cola:
-		v = cola.pop()
-		for ady in grafo.obtener_adyacentes(v):
-			if visitados[ady] == False :
-				peso_total= peso_total + grafo.obtener_peso(v,ady)
-				visitados[ady] = True
-				cola.append(ady)
-	return peso_total
+def reducir_caminos(dicc,grafo,nombre_archivo_csv):
+	tendido_min,suma = arbol_tendido_minimo(grafo)
+	exportar_csv(dicc,tendido_min, nombre_archivo_csv)
+	print("Peso total:", suma)
 
 
-def rusia_tendido_minimo(grafo):
-	tendido_min = arbol_tendido_minimo(grafo)
-
-	suma = sumar_pesos(tendido_min)
-	print("La suma de pesos es:", suma)
-
-	#ACA METER REDUCIR CAMINO
 
 
+#QUITAR EL WITH EN LEER_CSV
 
 
 
 def main():
-	print("                **** PRUEBAS DEL TP 3 *****\n")
+	f = open("comandos.txt","r")
 
+	ciudades_csv = "sedes.csv"
+	mapa_kml = "mapa.kml"#Que lo reciba por el main
+	rusia,dicc = leer_csv(ciudades_csv) #Que lo reciba por el main
+	#for line in sys.stdin:
+	for line in f.readlines():
+		linea = line.replace(',',"")
+		linea = linea.split(" ")
+		if(linea[0] == "ir"): #=====IR DESDE, HASTA
+			hasta = linea[2].rstrip() #Quito el \n
+			ir(dicc,rusia,linea[1],hasta)
+			print()
 
-    #------------------------------------------------------------
-	print("===== PRUEBAS LEER CSV =====")
-	'''
-	Leeo un archivo csv, me retorna un grafo con sus vertices
-	 y aristas(No dirigido, pesado)
-	 @Funciona bien!
-	'''
-
-	rusia,dicc = leer_csv("sedes.csv") #Leo csv y armo grafo
-	if rusia and dicc:
-		print("Se leyo correcamente...\n")
-
-
-
-    #---------------------------------------------------------------------
-	print("====== RUEBAS IR DESDE HASTA =====")
-	'''
-	 Recibo dicc de coordenadas y grafo de rusia
-	 imprimo camino minimo desde, hasta junto a su peso
-	 exporto archivo kml
-	 @Funciona bien,.
-	 FALTA: agregarle que se le pase el nombre del archivo
-	 por parametro
-
-	 '''
-	ir(dicc,rusia,"Moscu","Saransk")
+		if(linea[0] == "viaje"):
+			if(linea[1] == "aproximado"):
+				viaje_aproximado(dicc,rusia,linea[2].rstrip())
+				print()
+			if(linea[1] == "optimo"):
+				hola = "hola"
+				#ACA INVOCAR A BACK TRACKING
+		if(linea[0] == "itinerario"):
+			camino_recomendaciones(rusia,linea[1].rstrip())
+			print()
+		if(linea[0] == "reducir_caminos"):
+			reducir_caminos(dicc,rusia,linea[1].rstrip())
+	f.close()
 
 
 
-    #--------------------------------------------------------------------------
-	print("===== PRUEBAS VIAJANTE APROX ====")
-	'''
-	Problema del viajante, imprime lista y peso, exporta archivo kml
-	@Funciona bien
-	FALTA: agregarle que se le pase el nombre por parametro
-	'''
-	viaje_aproximado(dicc,rusia,"Sochi")
+main()
+
 
 	#--------------------------------------------------------------------------
 	
@@ -503,10 +542,15 @@ def main():
 	
 	#print(tsp_backtracking(rusia.obtener_vertices(), 0 , 0, CONSTANTE_MAX,rusia))
 
+<<<<<<< HEAD
 	viajante(rusia,"Sochi")
 	#---------------------------------------------------------------------
 	print("===== PRUEBAS TENDIDO MINIMO ====")
 	rusia_tendido_minimo(rusia)
+=======
+
+
+>>>>>>> 5cafd1a64c4b8b6ff03b966486e9d9d1aafb0b6a
 
 
 
