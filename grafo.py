@@ -159,7 +159,7 @@ class Grafo:
 def arbol_tendido_minimo(grafo_1):
 	heapq = []
 	visitados = {}
-	grafo_n = Grafo(False,True) #no es dirigido ?
+	grafo_n = Grafo(False,True)
 	cant_vertices = len(grafo_1.obtener_vertices())
 	peso_total = 0
 
@@ -193,7 +193,7 @@ def arbol_tendido_minimo(grafo_1):
 	return grafo_n,peso_total
 
 
-def orden_topologico(grafo): #Ver el tema de return NONE si no puede-
+def orden_topologico(grafo):
 	grado_entrada = {}
 	ordenado = []
 
@@ -358,15 +358,11 @@ def leer_csv_recomendaciones(recomendaciones_csv):
 	f.close()
 	return grafo
 
-
-
-
-
 def imprimir_lista(lista):
 	string = next(lista)
 	for x in lista:
 		string = string+" -> "+x
-	print(string) #FUNCIONA BIEN
+	print(string)
 
 def lista_a_kml(grafo,lista,archivo_kml,dicc):
 	with open(archivo_kml, "w") as f:
@@ -400,6 +396,12 @@ def lista_a_kml(grafo,lista,archivo_kml,dicc):
 		f.write("    </Document>\n")
 		f.write("</kml>\n") #FUNCIONA BIEN
 
+def calcular_costo_lista(grafo,lista):
+	costo = 0
+	for x in range(0,len(lista)-1):
+		costo = costo +grafo.obtener_peso(lista[x],lista[x+1])
+	return costo
+
 
 #=====COMANDOS=====
 
@@ -414,20 +416,22 @@ def viaje_aproximado(dicc,grafo,desde): #FUNCIONA BIEN
 	camino,peso_total = psp_greedy(grafo,desde)
 	itera = iter(camino)
 	imprimir_lista(itera)
-	print("Peso total:",peso_total)
+	print("Costo total:",peso_total)
 	lista_a_kml(grafo,camino,"viaje_aproximado.kml",dicc)
 
-def camino_recomendaciones(recomendaciones_csv):
+def camino_recomendaciones(rusia,recomendaciones_csv):
 	grafo = leer_csv_recomendaciones(recomendaciones_csv)
 	lista = orden_topologico(grafo)
-	itera = iter(lista)
+	itera= iter(lista)
 	imprimir_lista(itera)
+	costo = calcular_costo_lista(rusia,lista)
+	print("Costo total:",costo)
 
 
 def reducir_caminos(dicc,grafo,nombre_archivo_csv):
 	tendido_min,suma = arbol_tendido_minimo(grafo)
 	exportar_csv(dicc,tendido_min, nombre_archivo_csv)
-	print("La suma de pesos es:", suma)
+	print("Peso total:", suma)
 
 
 
@@ -478,8 +482,10 @@ def main():
 	'''
 	viaje_aproximado(dicc,rusia,"Sochi")
 
+	#--------------------------------------------------------------------------
 
-
+	print("===== PRUEBAS CON RECOMENDACIONES CSV ====")
+	camino_recomendaciones(rusia,"ejemplo_recomendaciones.csv")
 
 	#---------------------------------------------------------------------
 	print("===== PRUEBAS REDUCIR CAMINO ====")
@@ -488,8 +494,7 @@ def main():
 
 
 
-	print("===== PRUEBAS CON RECOMENDACIONES CSV ====")
-	camino_recomendaciones("ejemplo_recomendaciones.csv")
+
 
 
 
