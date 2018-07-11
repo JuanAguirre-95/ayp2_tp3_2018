@@ -289,6 +289,7 @@ def psp_greedy(grafo,origen): #Retorna lista con orden y peso total
 		orden_visitado.append(actual)
 	return orden_visitado,peso_total
 
+
 # def swap(elem1, elem2):
 # 	elem1, elem2 = elem2, elem1
 # def distancia(grafo,elem1, elem2):
@@ -348,6 +349,9 @@ def tsp_bck(grafo, vert_ini, vert_act, costo_act, mejor_costo, camino_actual):
 			camino_actual.pop(vert_ant)
 			vert_act = vert_ant
 	return False
+
+
+
 
 
 # ===========FUNCIONES PARA LA INTERFAZ================
@@ -494,24 +498,30 @@ def reducir_caminos(dicc,grafo,nombre_archivo_csv):
 
 
 
+
+
+
 #QUITAR EL WITH EN LEER_CSV
 
 
-
-def main():
+def main():  #PONERLE EXCEPTIONES?
 	f = open("comandos.txt","r")
+	if (len(sys.argv) != 3):
+		print("Cantidad de parametros erronea")
 
-	ciudades_csv = "sedes.csv"
-	mapa_kml = "mapa.kml"#Que lo reciba por el main
-	rusia,dicc = leer_csv(ciudades_csv) #Que lo reciba por el main
-	#for line in sys.stdin:
-	for line in f.readlines():
+	lista_argumentos = sys.argv
+	ciudades_csv =lista_argumentos[1]
+	mapa_kml =lista_argumentos[2]
+	print(ciudades_csv)
+	print(mapa_kml)
+
+	rusia,dicc = leer_csv(ciudades_csv)
+	for line in sys.stdin:
 		linea = line.replace(',',"")
 		linea = linea.split(" ")
 		if(linea[0] == "ir"):
-			hasta = linea[2].rstrip() #Quito el \n
+			hasta = linea[2].rstrip()
 			ir(dicc,rusia,linea[1],hasta,mapa_kml)
-			print()
 
 		if(linea[0] == "viaje"):
 			if(linea[1] == "aproximado"):
@@ -520,51 +530,13 @@ def main():
 			if(linea[1] == "optimo"):
 				hola = "hola"
 				#ACA INVOCAR A BACK TRACKING
+
 		if(linea[0] == "itinerario"):
 			camino_recomendaciones(dicc,rusia,linea[1].rstrip(),mapa_kml)
-			print()
+
 		if(linea[0] == "reducir_caminos"):
 			reducir_caminos(dicc,rusia,linea[1].rstrip())
-			print()
 	f.close()
-
-
-
-main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 main()
