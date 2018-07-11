@@ -3,6 +3,7 @@ import sys
 from heapq import heappush, heappop
 from collections import deque
 import math
+import itertools
 CONSTANTE_MAX = 999999
 
 class Vertice:
@@ -320,6 +321,7 @@ def viajante(grafo, origen):
 	costo_act = 0
 	visitados = {}
 	tsp_bck(grafo,origen,origen,costo_act,mejor_costo,camino,visitados)
+	print("MEJOR CAMINO:")
 	print(camino,costo_act)
 
 
@@ -341,7 +343,7 @@ def tsp_bck(grafo, vert_ini, vert_act, costo_act, mejor_costo, camino_actual,vis
 
 		if ady in visitados and ady in camino_actual:
 			continue
-		if costo_act +peso < mejor_costo:
+		if (costo_act + peso) < mejor_costo:
 			print("ENTRO")
 			costo_act += peso
 			print(costo_act)
@@ -349,11 +351,10 @@ def tsp_bck(grafo, vert_ini, vert_act, costo_act, mejor_costo, camino_actual,vis
 			visitados[vert_act] = True
 			print("Metio",ady)
 			camino_actual.append(ady)
-			print(camino_actual)
 			vert_ant = vert_act
 			vert_act = ady
 
-		if tsp_bck(grafo, vert_ant, vert_act,costo_act,mejor_costo,camino_actual,visitados) == False: #poda
+		if tsp_bck(grafo, vert_ant, ady,costo_act,mejor_costo,camino_actual,visitados) == False: #poda
 			print("PODO!")
 			costo_act -= peso
 			print("Saco",vert_act)
@@ -529,8 +530,23 @@ def main():  #PONERLE EXCEPTIONES?
 	#print(mapa_kml)
 
 	rusia,dicc = leer_csv("sedes.csv")
-	viajante(rusia,"Sochi")
+	#viajante(rusia,"Sochi")
+	largo_camino = CONSTANTE_MAX
+	caminos_mas_cortos = {}
 
+	for elem in itertools.permutations(rusia.obtener_vertices()):
+		cam = 0
+		for i in range(len(elem)):
+			if i+1 < len(elem):
+				cam += rusia.obtener_peso(elem[i],elem[i+1])
+			if i == len(elem):
+				cam += rusia.obtener_peso(elem[i],elem[0])
+
+		if cam < largo_camino:
+			largo_camino = cam
+			caminos_mas_cortos[elem] = largo_camino
+
+	print(caminos_mas_cortos)
 	# for line in sys.stdin:
 	# 	linea = line.replace(',',"")
 	# 	linea = linea.split(" ")
