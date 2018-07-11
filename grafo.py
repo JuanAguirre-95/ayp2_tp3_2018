@@ -318,35 +318,48 @@ def viajante(grafo, origen):
 	mejor_costo = CONSTANTE_MAX
 	prim = grafo.obtener_adyacentes(origen)
 	costo_act = 0
-	tsp_bck(grafo,origen,list(prim)[0],costo_act,mejor_costo,camino)
+	visitados = {}
+	tsp_bck(grafo,origen,origen,costo_act,mejor_costo,camino,visitados)
 	print(camino,costo_act)
 
 
-def tsp_bck(grafo, vert_ini, vert_act, costo_act, mejor_costo, camino_actual):
+def tsp_bck(grafo, vert_ini, vert_act, costo_act, mejor_costo, camino_actual,visitados):
 
-	visitados = {}
+	if len(visitados) == len(grafo.obtener_vertices()):
+		if vert_ini == vert_act:
+			return True
+		else:
+			return False
 
-	if vert_ini == vert_act:
-		return True
 	camino_actual.append(vert_ini)
 	vert_ant = vert_ini
 	for ady in grafo.obtener_adyacentes(vert_act):
+		
 		peso = grafo.obtener_peso(vert_act,ady)
-		print(peso)
-		if costo_act < mejor_costo and ady not in visitados:
+
+		print("{}	--{}->	{}".format(vert_act,peso,ady))
+
+		if ady in visitados and ady in camino_actual:
+			continue
+		if costo_act +peso < mejor_costo:
 			print("ENTRO")
-			mejor_costo = costo_act + peso
-			print(mejor_costo,"Mej")
+			costo_act += peso
+			print(costo_act)
+			mejor_costo = costo_act
 			visitados[vert_act] = True
-			camino_actual.append(vert_act)
+			print("Metio",ady)
+			camino_actual.append(ady)
+			print(camino_actual)
 			vert_ant = vert_act
 			vert_act = ady
 
-		if tsp_bck(grafo, vert_act, ady,costo_act,mejor_costo,camino_actual) == False: #poda
+		if tsp_bck(grafo, vert_ant, vert_act,costo_act,mejor_costo,camino_actual,visitados) == False: #poda
 			print("PODO!")
 			costo_act -= peso
-			visitados.pop(vert_ant)
-			camino_actual.pop(vert_ant)
+			print("Saco",vert_act)
+			visitados.pop(vert_act,None)
+			camino_actual.remove(ady)
+			print("----{}".format(camino_actual))
 			vert_act = vert_ant
 	return False
 
@@ -505,38 +518,40 @@ def reducir_caminos(dicc,grafo,nombre_archivo_csv):
 
 
 def main():  #PONERLE EXCEPTIONES?
-	f = open("comandos.txt","r")
-	if (len(sys.argv) != 3):
-		print("Cantidad de parametros erronea")
+	#f = open("comandos.txt","r")
+	#if (len(sys.argv) != 3):
+	#	print("Cantidad de parametros erronea")
 
-	lista_argumentos = sys.argv
-	ciudades_csv =lista_argumentos[1]
-	mapa_kml =lista_argumentos[2]
-	print(ciudades_csv)
-	print(mapa_kml)
+	#lista_argumentos = sys.argv
+	#ciudades_csv =lista_argumentos[1]
+	#mapa_kml =lista_argumentos[2]
+	#print(ciudades_csv)
+	#print(mapa_kml)
 
-	rusia,dicc = leer_csv(ciudades_csv)
-	for line in sys.stdin:
-		linea = line.replace(',',"")
-		linea = linea.split(" ")
-		if(linea[0] == "ir"):
-			hasta = linea[2].rstrip()
-			ir(dicc,rusia,linea[1],hasta,mapa_kml)
+	rusia,dicc = leer_csv("sedes.csv")
+	viajante(rusia,"Sochi")
 
-		if(linea[0] == "viaje"):
-			if(linea[1] == "aproximado"):
-				viaje_aproximado(dicc,rusia,linea[2].rstrip(),mapa_kml)
-				print()
-			if(linea[1] == "optimo"):
-				hola = "hola"
-				#ACA INVOCAR A BACK TRACKING
+	# for line in sys.stdin:
+	# 	linea = line.replace(',',"")
+	# 	linea = linea.split(" ")
+	# 	if(linea[0] == "ir"):
+	# 		hasta = linea[2].rstrip()
+	# 		ir(dicc,rusia,linea[1],hasta,mapa_kml)
 
-		if(linea[0] == "itinerario"):
-			camino_recomendaciones(dicc,rusia,linea[1].rstrip(),mapa_kml)
+	# 	if(linea[0] == "viaje"):
+	# 		if(linea[1] == "aproximado"):
+	# 			viaje_aproximado(dicc,rusia,linea[2].rstrip(),mapa_kml)
+	# 			print()
+	# 		if(linea[1] == "optimo"):
+	# 			hola = "hola"
+	# 			viajante(rusia,"Sochi")
 
-		if(linea[0] == "reducir_caminos"):
-			reducir_caminos(dicc,rusia,linea[1].rstrip())
-	f.close()
+	# 	if(linea[0] == "itinerario"):
+	# 		camino_recomendaciones(dicc,rusia,linea[1].rstrip(),mapa_kml)
+
+	# 	if(linea[0] == "reducir_caminos"):
+	# 		reducir_caminos(dicc,rusia,linea[1].rstrip())
+	# f.close()
 
 
 main()
