@@ -1,19 +1,18 @@
 ir Moscu, Saransk
 ir Sochi, Moscu
-ir San Petesburgo, Rostov
-ir Rostov, Ekaterinburgo
-ir Samara, Rostov
+ir Rostov del Don, Ekaterinburgo
+ir Samara, Rostov del Don
 ir Kaliningrado, Moscu
 ir Kazan, Rostov del Don
+viaje aproximado, Rostov del Don
 viaje optimo, Moscu
 viaje optimo, Ekaterinburgo
-viaje optimo, Rostov
+viaje optimo, Rostov del Don
 viaje optimo, Sochi
 viaje optimo, Rostov del Don
 viaje aproximado, Moscu
 viaje aproximado, Rostov del Don
-viaje aproximado, Rostov
 viaje aproximado, Kazan
 viaje aproximado, Samara
 itinerario recomendaciones.csv
-reducir camino caminos_reducidos.csv
+reducir_caminos reduct.csv
