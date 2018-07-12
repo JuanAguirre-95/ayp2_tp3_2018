@@ -16,8 +16,8 @@ git_pull:
 git_push:
 	git push origin master
 	
-run: $(sources)
-	python3 grafo.py
+run:
+	cat comandos_prueba.txt | python3 interfaz.py ciudades.csv mapa.kml
 	 
 	
 .PHONY : clean	
