@@ -3,7 +3,7 @@ import sys
 from heapq import heappush, heappop
 from collections import deque
 import math
-import itertools
+
 CONSTANTE_MAX = 999999
 
 class Vertice:
@@ -291,78 +291,45 @@ def psp_greedy(grafo,origen): #Retorna lista con orden y peso total
 	return orden_visitado,peso_total
 
 
-# def swap(elem1, elem2):
-# 	elem1, elem2 = elem2, elem1
-# def distancia(grafo,elem1, elem2):
-# 	print("{} - {}".format("ENTRO EN DISTANCIA: ",grafo.obtener_peso(elem1,elem2)))
-# 	return grafo.obtener_peso(elem1,elem2)
-
-# def tsp_backtracking(vertices, index, largo_actual, min_costo,grafo):
-# 	n = len(vertices)
-# 	if index == n:
-# 		minino = min(min_costo,largo_actual + distancia(vertices[n], vertices[0]))
-# 		print(minimo)
-# 		min_costo = minimo
-# 	else:
-# 		for i in range(index+1,n,1):
-# 			swap(vertices[index+1],vertices[i])
-# 			nuevo_largo = largo_actual + distancia(grafo,vertices[index],vertices[index+1])
-# 			if nuevo_largo >= min_costo:
-# 				continue
-# 			else:
-# 				min_costo = min(min_costo, tsp_backtracking(vertices, index+1, nuevo_largo, min_costo, grafo))
-# 				swap(vertices[index+1], vertices[i])
-# 	return min_costo
-
-def viajante(grafo, origen):
-	camino = []
-	mejor_costo = CONSTANTE_MAX
-	prim = grafo.obtener_adyacentes(origen)
-	costo_act = 0
-	visitados = {}
-	tsp_bck(grafo,origen,origen,costo_act,mejor_costo,camino,visitados)
-	print("MEJOR CAMINO:")
-	print(camino,costo_act)
 
 
-def tsp_bck(grafo, vert_ini, vert_act, costo_act, mejor_costo, camino_actual,visitados):
 
-	if len(visitados) == len(grafo.obtener_vertices()):
-		if vert_ini == vert_act:
-			return True
-		else:
-			return False
 
-	camino_actual.append(vert_ini)
-	vert_ant = vert_ini
-	for ady in grafo.obtener_adyacentes(vert_act):
-		
-		peso = grafo.obtener_peso(vert_act,ady)
 
-		print("{}	--{}->	{}".format(vert_act,peso,ady))
 
-		if ady in visitados and ady in camino_actual:
+def tdp_back(grafo, vert_ini, vert_act, actual,peso_recorrido, mejor_costo):
+
+	lista_aux = actual.copy()
+	lista_aux.append(vert_act)
+
+	if(len(lista_aux) == len(grafo.obtener_vertices())):
+		lista_aux.append(vert_ini)
+		actual = lista_aux.copy()
+		mejor_costo = peso_recorrido + grafo.obtener_peso(vert_act,vert_ini)		
+		return mejor_costo,actual
+
+	if mejor_costo <= peso_recorrido:
+		return None,None
+
+	for x in grafo.obtener_vertices():
+		if x in lista_aux:
 			continue
-		if (costo_act + peso) < mejor_costo:
-			print("ENTRO")
-			costo_act += peso
-			print(costo_act)
-			mejor_costo = costo_act
-			visitados[vert_act] = True
-			print("Metio",ady)
-			camino_actual.append(ady)
-			vert_ant = vert_act
-			vert_act = ady
+		peso_recorrido = peso_recorrido + grafo.obtener_peso(vert_act,x)
+		costo_temp,aux = tdp_back(grafo,vert_ini,x,lista_aux,peso_recorrido,mejor_costo)
+		if(costo_temp != None and  aux !=None):
+			if(costo_temp < mejor_costo):
+				mejor_costo = costo_temp
+				actual = aux
+		peso_recorrido = peso_recorrido - grafo.obtener_peso(vert_act,x)
+	return mejor_costo,actual
 
-		if tsp_bck(grafo, vert_ant, ady,costo_act,mejor_costo,camino_actual,visitados) == False: #poda
-			print("PODO!")
-			costo_act -= peso
-			print("Saco",vert_act)
-			visitados.pop(vert_act,None)
-			camino_actual.remove(ady)
-			print("----{}".format(camino_actual))
-			vert_act = vert_ant
-	return False
+
+
+
+
+
+
+
 
 
 
@@ -494,6 +461,19 @@ def viaje_aproximado(dicc,grafo,desde,nombre_kml): #FUNCIONA BIEN
 	print("Costo total:",peso_total)
 	lista_a_kml(camino,nombre_kml,dicc)
 
+def viajante_optimo(dicc,grafo,desde,nombre_kml):
+	lista = []
+	visited = {}
+	mejor_costo =  CONSTANTE_MAX
+
+	peso_recorrido = 0
+	costo,lista = tdp_back(grafo,desde,desde,lista,peso_recorrido,mejor_costo)
+	itera = iter(lista)
+	imprimir_lista(itera)
+	lista_a_kml(lista,nombre_kml,dicc)
+	print("Costo total:",costo)
+
+
 def camino_recomendaciones(dicc,rusia,recomendaciones_csv,nombre_kml):
 	grafo = leer_csv_recomendaciones(recomendaciones_csv)
 	lista = orden_topologico(grafo)
@@ -519,55 +499,36 @@ def reducir_caminos(dicc,grafo,nombre_archivo_csv):
 
 
 def main():  #PONERLE EXCEPTIONES?
-	#f = open("comandos.txt","r")
-	#if (len(sys.argv) != 3):
-	#	print("Cantidad de parametros erronea")
 
-	#lista_argumentos = sys.argv
-	#ciudades_csv =lista_argumentos[1]
-	#mapa_kml =lista_argumentos[2]
-	#print(ciudades_csv)
-	#print(mapa_kml)
+	if (len(sys.argv) != 3):
+		print("Cantidad de parametros erronea")
 
-	rusia,dicc = leer_csv("sedes.csv")
-	#viajante(rusia,"Sochi")
-	largo_camino = CONSTANTE_MAX
-	caminos_mas_cortos = {}
+	lista_argumentos = sys.argv
+	ciudades_csv =lista_argumentos[1]
+	mapa_kml =lista_argumentos[2]
 
-	for elem in itertools.permutations(rusia.obtener_vertices()):
-		cam = 0
-		for i in range(len(elem)):
-			if i+1 < len(elem):
-				cam += rusia.obtener_peso(elem[i],elem[i+1])
-			if i == len(elem):
-				cam += rusia.obtener_peso(elem[i],elem[0])
 
-		if cam < largo_camino:
-			largo_camino = cam
-			caminos_mas_cortos[elem] = largo_camino
+	rusia,dicc = leer_csv(ciudades_csv)
+	for line in sys.stdin:
+		linea = line.replace(',',"")
+		linea = linea.split(" ")
+		if(linea[0] == "ir"):
+			hasta = linea[2].rstrip()
+			ir(dicc,rusia,linea[1],hasta,mapa_kml)
 
-	print(caminos_mas_cortos)
-	# for line in sys.stdin:
-	# 	linea = line.replace(',',"")
-	# 	linea = linea.split(" ")
-	# 	if(linea[0] == "ir"):
-	# 		hasta = linea[2].rstrip()
-	# 		ir(dicc,rusia,linea[1],hasta,mapa_kml)
+		if(linea[0] == "viaje"):
+			if(linea[1] == "aproximado"):
+				viaje_aproximado(dicc,rusia,linea[2].rstrip(),mapa_kml)
+				print()
+			if(linea[1] == "optimo"):
+				viajante_optimo(dicc,rusia,linea[2].rstrip(),mapa_kml)
 
-	# 	if(linea[0] == "viaje"):
-	# 		if(linea[1] == "aproximado"):
-	# 			viaje_aproximado(dicc,rusia,linea[2].rstrip(),mapa_kml)
-	# 			print()
-	# 		if(linea[1] == "optimo"):
-	# 			hola = "hola"
-	# 			viajante(rusia,"Sochi")
+		if(linea[0] == "itinerario"):
+			camino_recomendaciones(dicc,rusia,linea[1].rstrip(),mapa_kml)
 
-	# 	if(linea[0] == "itinerario"):
-	# 		camino_recomendaciones(dicc,rusia,linea[1].rstrip(),mapa_kml)
-
-	# 	if(linea[0] == "reducir_caminos"):
-	# 		reducir_caminos(dicc,rusia,linea[1].rstrip())
-	# f.close()
+		if(linea[0] == "reducir_caminos"):
+			reducir_caminos(dicc,rusia,linea[1].rstrip())
+	f.close()
 
 
 main()
