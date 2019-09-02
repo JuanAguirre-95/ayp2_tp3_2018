@@ -1,3 +1,3 @@
 TP3 - Grafos
-Juan Aguirre 101462
+Juan Aguirre
 Nicolas Diaz
